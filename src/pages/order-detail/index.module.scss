@@ -381,6 +381,14 @@
   color: $color-text-secondary;
 }
 
+.returnSubTitle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-sm;
+  margin-bottom: 4rpx;
+  display: block;
+}
+
 .returnRow {
   display: flex;
   justify-content: space-between;

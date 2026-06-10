@@ -54,6 +54,7 @@ export interface Order {
   salesman: string;
   paymentRecords: PaymentRecord[];
   returnRecords: ReturnRecord[];
+  quotationId?: string;
 }
 
 export interface PaymentRecord {
@@ -69,6 +70,7 @@ export interface ReturnRecord {
   id: string;
   type: 'return' | 'exchange';
   items: ReturnItem[];
+  exchangeItems: ReturnItem[];
   reason: string;
   refundAmount: number;
   status: 'pending' | 'processed' | 'completed';
@@ -109,6 +111,7 @@ export interface Quotation {
   status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
   createdAt: string;
   remark: string;
+  orderId?: string;
 }
 
 export interface QuotationItem {

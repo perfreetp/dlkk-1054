@@ -245,6 +245,159 @@
   color: $color-primary;
 }
 
+.copyBtn {
+  padding: 8rpx 20rpx;
+  border-radius: $radius-sm;
+  background: rgba($color-primary, 0.1);
+}
+
+.copyBtnText {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+}
+
+.statGridItem {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  text-align: center;
+}
+
+.statGridValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.statGridLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.incomeColor {
+  color: #00b42a;
+}
+
+.balanceColor {
+  color: $color-primary;
+}
+
+.refundRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 1rpx dashed $color-divider;
+}
+
+.refundLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.refundValue {
+  font-size: $font-size-sm;
+  color: #f53f3f;
+  font-weight: $font-weight-medium;
+}
+
+.sectionCount {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.orderList {
+  margin-top: $spacing-sm;
+}
+
+.emptyTip {
+  padding: $spacing-xl 0;
+  text-align: center;
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+}
+
+.orderRow {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.orderMain {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.orderNo {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.orderAmount {
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.orderSub {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.orderDate {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.orderStatus {
+  font-size: $font-size-xs;
+  color: $color-primary;
+}
+
+.orderPayInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8rpx;
+  border-top: 1rpx dashed $color-divider;
+}
+
+.paidText {
+  font-size: $font-size-xs;
+  color: #00b42a;
+}
+
+.balanceText {
+  font-size: $font-size-xs;
+  color: $color-primary;
+}
+
 .remarkBox {
   background-color: $color-bg-page;
   border-radius: $radius-md;

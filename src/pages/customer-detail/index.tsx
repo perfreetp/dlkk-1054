@@ -1,24 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, Image, ScrollView } from '@tarojs/components';
 import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import { useStore } from '@/store';
-import { formatPrice, formatDate, formatNumber } from '@/utils/format';
-import type { Customer } from '@/types';
+import { formatPrice, formatDate, formatDateTime, getOrderStatusText, getPaymentStatusText } from '@/utils/format';
+import type { Customer, Order } from '@/types';
 
 const CustomerDetailPage: React.FC = () => {
   const router = useRouter();
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [version, setVersion] = useState(0);
+
+  const allOrders = useStore((s) => s.orders);
+  const getCustomerStatement = useStore((s) => s.getCustomerStatement);
+  const generateCustomerStatementContent = useStore((s) => s.generateCustomerStatementContent);
 
   useDidShow(() => {
     const id = router.params.id;
     const found = useStore.getState().customers.find(c => c.id === id);
     if (found) {
       setCustomer(found);
+      setVersion(v => v + 1);
     }
   });
 
-  if (!customer) {
+  const statement = useMemo(() => {
+    if (!customer) return null;
+    return getCustomerStatement(customer.id);
+  }, [customer, allOrders, version, getCustomerStatement]);
+
+  if (!customer || !statement) {
     return (
       <View className={styles.detailPage}>
         <Text>加载中...</Text>
@@ -40,12 +51,33 @@ const CustomerDetailPage: React.FC = () => {
   };
 
   const handleViewOrders = () => {
-    const customerOrders = useStore.getState().orders.filter(o => o.customerId === customer.id);
-    if (customerOrders.length > 0) {
+    if (statement.orders.length > 0) {
       Taro.switchTab({ url: '/pages/orders/index' });
     } else {
       Taro.showToast({ title: '暂无历史订单', icon: 'none' });
     }
+  };
+
+  const handleCopyStatement = async () => {
+    const content = generateCustomerStatementContent(customer.id);
+    if (!content) {
+      Taro.showToast({ title: '生成失败', icon: 'none' });
+      return;
+    }
+    try {
+      await Taro.setClipboardData({ data: content });
+      Taro.showModal({
+        title: '对账单已复制',
+        content: '客户对账单已复制到剪贴板，可直接粘贴发送给客户。',
+        showCancel: false,
+      });
+    } catch (e) {
+      Taro.showToast({ title: '复制失败', icon: 'none' });
+    }
+  };
+
+  const handleOrderClick = (orderId: string) => {
+    Taro.navigateTo({ url: `/pages/order-detail/index?id=${orderId}` });
   };
 
   const handleEditCustomer = () => {
@@ -119,6 +151,84 @@ const CustomerDetailPage: React.FC = () => {
             className={`${styles.progressFill} ${isCreditWarning ? styles.progressWarning : ''}`}
             style={{ width: `${creditPercent}%` }}
           />
+        </View>
+      </View>
+
+      <View className={styles.infoSection}>
+        <View className={styles.sectionHeader}>
+          <Text className={styles.sectionTitle}>📊 客户对账</Text>
+          <View className={styles.copyBtn} onClick={handleCopyStatement}>
+            <Text className={styles.copyBtnText}>复制对账单</Text>
+          </View>
+        </View>
+        <View className={styles.statGrid}>
+          <View className={styles.statGridItem}>
+            <Text className={styles.statGridValue}>{statement.orderCount}</Text>
+            <Text className={styles.statGridLabel}>订单数</Text>
+          </View>
+          <View className={styles.statGridItem}>
+            <Text className={styles.statGridValue}>{formatPrice(statement.totalAmount)}</Text>
+            <Text className={styles.statGridLabel}>累计订单额</Text>
+          </View>
+          <View className={styles.statGridItem}>
+            <Text className={`${styles.statGridValue} ${styles.incomeColor}`}>
+              {formatPrice(statement.totalPaid)}
+            </Text>
+            <Text className={styles.statGridLabel}>已收款</Text>
+          </View>
+          <View className={styles.statGridItem}>
+            <Text className={`${styles.statGridValue} ${styles.balanceColor}`}>
+              {formatPrice(statement.unpaidBalance)}
+            </Text>
+            <Text className={styles.statGridLabel}>未收尾款</Text>
+          </View>
+        </View>
+        {statement.totalRefund > 0 && (
+          <View className={styles.refundRow}>
+            <Text className={styles.refundLabel}>累计退款</Text>
+            <Text className={styles.refundValue}>-{formatPrice(statement.totalRefund)}</Text>
+          </View>
+        )}
+      </View>
+
+      <View className={styles.infoSection}>
+        <View className={styles.sectionHeader}>
+          <Text className={styles.sectionTitle}>📋 历史订单</Text>
+          <Text className={styles.sectionCount}>{statement.orders.length} 单</Text>
+        </View>
+        <View className={styles.orderList}>
+          {statement.orders.length === 0 ? (
+            <View className={styles.emptyTip}>
+              <Text>暂无历史订单</Text>
+            </View>
+          ) : (
+            statement.orders.map((order: Order) => (
+              <View
+                key={order.id}
+                className={styles.orderRow}
+                onClick={() => handleOrderClick(order.id)}
+              >
+                <View className={styles.orderMain}>
+                  <Text className={styles.orderNo}>{order.orderNo}</Text>
+                  <Text className={styles.orderAmount}>
+                    ￥{order.totalAmount.toFixed(2)}
+                  </Text>
+                </View>
+                <View className={styles.orderSub}>
+                  <Text className={styles.orderDate}>
+                    {formatDateTime(order.createdAt)}
+                  </Text>
+                  <Text className={styles.orderStatus}>
+                    {getOrderStatusText(order.status)} · {getPaymentStatusText(order.paymentStatus)}
+                  </Text>
+                </View>
+                <View className={styles.orderPayInfo}>
+                  <Text className={styles.paidText}>已收：￥{order.deposit.toFixed(2)}</Text>
+                  <Text className={styles.balanceText}>待收：￥{order.balance.toFixed(2)}</Text>
+                </View>
+              </View>
+            ))
+          )}
         </View>
       </View>
 

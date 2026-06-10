@@ -62,6 +62,15 @@ interface StoreState {
   };
   generateOrderShareContent: (orderId: string) => string;
   generateQuotationShareContent: (quotationId: string) => string;
+  getCustomerStatement: (customerId: string) => {
+    orderCount: number;
+    totalAmount: number;
+    totalPaid: number;
+    unpaidBalance: number;
+    totalRefund: number;
+    orders: Order[];
+  };
+  generateCustomerStatementContent: (customerId: string) => string;
 
   persist: () => void;
   loadFromStorage: () => boolean;
@@ -93,7 +102,10 @@ const patchMockOrders = (): Order[] => {
   return mockOrders.map((o) => ({
     ...o,
     paymentRecords: o.paymentRecords || [],
-    returnRecords: o.returnRecords || [],
+    returnRecords: (o.returnRecords || []).map((r) => ({
+      ...r,
+      exchangeItems: (r as any).exchangeItems || [],
+    })),
   }));
 };
 
@@ -322,12 +334,13 @@ export const useStore = create<StoreState>((set, get) => ({
       salesman: '张店长',
       paymentRecords: [],
       returnRecords: [],
+      quotationId,
     };
 
     set((state) => ({
       orders: [newOrder, ...state.orders],
       quotations: state.quotations.map((q) =>
-        q.id === quotationId ? { ...q, status: 'accepted' as const } : q
+        q.id === quotationId ? { ...q, status: 'accepted' as const, orderId } : q
       ),
     }));
     get().persist();
@@ -408,6 +421,7 @@ export const useStore = create<StoreState>((set, get) => ({
   addReturnRecord: (orderId, data) => {
     const now = new Date().toISOString();
     const newReturn: ReturnRecord = {
+      exchangeItems: [],
       ...data,
       id: generateId(),
       createdAt: now,
@@ -445,15 +459,60 @@ export const useStore = create<StoreState>((set, get) => ({
         if (ret.type === 'return') {
           newTotal = Math.max(0, o.totalAmount - ret.refundAmount);
         } else {
-          newTotal = Math.max(0, o.totalAmount + ret.refundAmount);
+          const returnedAmount = ret.items.reduce((sum, it) => sum + it.amount, 0);
+          const newItemsAmount = ret.exchangeItems.reduce((sum, it) => sum + it.amount, 0);
+          const diff = newItemsAmount - returnedAmount;
+          newTotal = Math.max(0, o.totalAmount + diff);
         }
 
         const newDeposit = Math.min(o.deposit, newTotal);
         const newBalance = Math.max(0, newTotal - newDeposit);
         const newPaymentStatus: Order['paymentStatus'] =
           newBalance <= 0 ? 'paid' : newDeposit > 0 ? 'partial' : 'unpaid';
+
+        let newItems = o.items;
+        if (ret.type === 'exchange' && ret.exchangeItems.length > 0) {
+          const updated = o.items.map((it) => {
+            const retMatch = ret.items.find((ri) => ri.productId === it.productId);
+            if (retMatch) {
+              const newQty = it.quantity - retMatch.quantity;
+              if (newQty <= 0) return null;
+              return { ...it, quantity: newQty, amount: newQty * it.price };
+            }
+            return it;
+          }).filter(Boolean) as OrderItem[];
+
+          const existingProdIds = new Set(updated.map((it) => it.productId));
+          const addItems = ret.exchangeItems
+            .filter((ei) => !existingProdIds.has(ei.productId))
+            .map((ei) => {
+              const originItem = o.items.find((it) => it.productId === ei.productId);
+              return {
+                productId: ei.productId,
+                productName: ei.productName,
+                productImage: originItem?.productImage || '',
+                model: ei.model,
+                price: ei.price,
+                quantity: ei.quantity,
+                amount: ei.amount,
+              } as OrderItem;
+            });
+
+          const mergedQtyItems = updated.map((it) => {
+            const exItem = ret.exchangeItems.find((ei) => ei.productId === it.productId);
+            if (exItem) {
+              const newQty = it.quantity + exItem.quantity;
+              return { ...it, quantity: newQty, amount: newQty * it.price };
+            }
+            return it;
+          });
+
+          newItems = [...mergedQtyItems, ...addItems];
+        }
+
         return {
           ...o,
+          items: newItems,
           returnRecords: updatedReturns,
           totalAmount: newTotal,
           balance: newBalance,
@@ -462,16 +521,29 @@ export const useStore = create<StoreState>((set, get) => ({
         };
       });
 
-      const newProducts = s.products.map((p) => {
-        const match = ret.items.find((it) => it.productId === p.id);
-        if (match) return { ...p, stock: p.stock + match.quantity };
-        return p;
+      let newProducts = s.products;
+      let newInventory = s.inventoryItems;
+
+      ret.items.forEach((returnItem) => {
+        newProducts = newProducts.map((p) =>
+          p.id === returnItem.productId ? { ...p, stock: p.stock + returnItem.quantity } : p
+        );
+        newInventory = newInventory.map((item) =>
+          item.productId === returnItem.productId
+            ? { ...item, stock: item.stock + returnItem.quantity }
+            : item
+        );
       });
 
-      const newInventory = s.inventoryItems.map((item) => {
-        const match = ret.items.find((it) => it.productId === item.productId);
-        if (match) return { ...item, stock: item.stock + match.quantity };
-        return item;
+      ret.exchangeItems.forEach((exItem) => {
+        newProducts = newProducts.map((p) =>
+          p.id === exItem.productId ? { ...p, stock: Math.max(0, p.stock - exItem.quantity) } : p
+        );
+        newInventory = newInventory.map((item) =>
+          item.productId === exItem.productId
+            ? { ...item, stock: Math.max(0, item.stock - exItem.quantity) }
+            : item
+        );
       });
 
       let financeRecords = s.financeRecords;
@@ -490,12 +562,16 @@ export const useStore = create<StoreState>((set, get) => ({
         };
         financeRecords = [newFinance, ...financeRecords];
       } else if (ret.type === 'exchange') {
-        if (ret.refundAmount > 0) {
+        const returnedAmount = ret.items.reduce((sum, it) => sum + it.amount, 0);
+        const newAmount = ret.exchangeItems.reduce((sum, it) => sum + it.amount, 0);
+        const diff = newAmount - returnedAmount;
+
+        if (diff > 0) {
           const newFinance: FinanceRecord = {
             id: financeId,
             type: 'income',
             category: '换货补差收入',
-            amount: ret.refundAmount,
+            amount: diff,
             orderId,
             orderNo: order.orderNo,
             customerId: order.customerId,
@@ -504,12 +580,12 @@ export const useStore = create<StoreState>((set, get) => ({
             createdAt: now,
           };
           financeRecords = [newFinance, ...financeRecords];
-        } else if (ret.refundAmount < 0) {
+        } else if (diff < 0) {
           const newFinance: FinanceRecord = {
             id: financeId,
             type: 'expense',
             category: '换货退款支出',
-            amount: Math.abs(ret.refundAmount),
+            amount: Math.abs(diff),
             orderId,
             orderNo: order.orderNo,
             customerId: order.customerId,
@@ -649,9 +725,8 @@ export const useStore = create<StoreState>((set, get) => ({
     lines.push(`💰 报价总额：￥${q.totalAmount.toFixed(2)}`);
 
     let paymentInfo = '';
-    if (q.status === 'accepted') {
-      const linkedOrder = get().orders.find((o) => o.customerId === q.customerId && o.items.length === q.items.length
-        && o.totalAmount === q.totalAmount);
+    if (q.status === 'accepted' && q.orderId) {
+      const linkedOrder = get().orders.find((o) => o.id === q.orderId);
       if (linkedOrder) {
         let psLabel = '';
         if (linkedOrder.paymentStatus === 'unpaid') psLabel = '未收款';
@@ -661,6 +736,8 @@ export const useStore = create<StoreState>((set, get) => ({
       } else {
         paymentInfo = '报价单已确认，待开单后录入款项';
       }
+    } else if (q.status === 'accepted') {
+      paymentInfo = '报价单已确认，待开单后录入款项';
     } else if (q.status === 'sent') {
       paymentInfo = '报价单已发送客户，款项待确认';
     } else if (q.status === 'draft') {
@@ -678,6 +755,81 @@ export const useStore = create<StoreState>((set, get) => ({
       lines.push('');
       lines.push(`备注：${q.remark}`);
     }
+    lines.push('');
+    lines.push('——— 灯具批发中心 ———');
+    return lines.join('\n');
+  },
+
+  getCustomerStatement: (customerId) => {
+    const state = get();
+    const customerOrders = state.orders.filter((o) => o.customerId === customerId);
+
+    let totalAmount = 0;
+    let totalPaid = 0;
+    let unpaidBalance = 0;
+    let totalRefund = 0;
+
+    customerOrders.forEach((o) => {
+      totalAmount += o.totalAmount;
+      totalPaid += o.deposit;
+      unpaidBalance += o.balance;
+      (o.returnRecords || []).forEach((r) => {
+        if (r.status === 'completed' && r.type === 'return') {
+          totalRefund += r.refundAmount;
+        }
+        if (r.status === 'completed' && r.type === 'exchange') {
+          const returned = r.items.reduce((s, i) => s + i.amount, 0);
+          const newAmt = r.exchangeItems.reduce((s, i) => s + i.amount, 0);
+          if (newAmt - returned < 0) totalRefund += returned - newAmt;
+        }
+      });
+    });
+
+    return {
+      orderCount: customerOrders.length,
+      totalAmount,
+      totalPaid,
+      unpaidBalance,
+      totalRefund,
+      orders: customerOrders,
+    };
+  },
+
+  generateCustomerStatementContent: (customerId) => {
+    const state = get();
+    const customer = state.customers.find((c) => c.id === customerId);
+    if (!customer) return '';
+
+    const stmt = state.getCustomerStatement(customerId);
+    const lines: string[] = [];
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    lines.push(`【客户对账单】`);
+    lines.push(`客户：${customer.name}（${customer.company}）`);
+    lines.push(`对账日期：${dateStr}`);
+    lines.push('');
+    lines.push(`📊 账务汇总：`);
+    lines.push(`  订单总数：${stmt.orderCount} 单`);
+    lines.push(`  累计订单金额：￥${stmt.totalAmount.toFixed(2)}`);
+    lines.push(`  已收款：￥${stmt.totalPaid.toFixed(2)}`);
+    lines.push(`  未收尾款：￥${stmt.unpaidBalance.toFixed(2)}`);
+    lines.push(`  累计退款：￥${stmt.totalRefund.toFixed(2)}`);
+    lines.push('');
+    lines.push('📋 订单明细：');
+    stmt.orders.forEach((o, idx) => {
+      const statusMap: Record<string, string> = {
+        pending: '待确认',
+        confirmed: '已确认',
+        processing: '备货中',
+        shipped: '已发货',
+        completed: '已完成',
+        cancelled: '已取消',
+      };
+      lines.push(`${idx + 1}. ${o.orderNo}`);
+      lines.push(`   日期：${o.createdAt.slice(0, 10)}  状态：${statusMap[o.status] || o.status}`);
+      lines.push(`   金额：￥${o.totalAmount.toFixed(2)}  已收：￥${o.deposit.toFixed(2)}  待收：￥${o.balance.toFixed(2)}`);
+    });
     lines.push('');
     lines.push('——— 灯具批发中心 ———');
     return lines.join('\n');
@@ -712,10 +864,17 @@ export const useStore = create<StoreState>((set, get) => ({
           orders: (data.orders || getDefaultState().orders).map((o: Order) => ({
             ...o,
             paymentRecords: o.paymentRecords || [],
-            returnRecords: o.returnRecords || [],
+            returnRecords: (o.returnRecords || []).map((r: any) => ({
+              ...r,
+              exchangeItems: r.exchangeItems || [],
+            })),
+            quotationId: o.quotationId,
           })),
           customers: data.customers || getDefaultState().customers,
-          quotations: data.quotations || getDefaultState().quotations,
+          quotations: (data.quotations || getDefaultState().quotations).map((q: Quotation) => ({
+            ...q,
+            orderId: q.orderId,
+          })),
           inventoryItems: data.inventoryItems || getDefaultState().inventoryItems,
           restockRecords: data.restockRecords || getDefaultState().restockRecords,
           financeRecords: data.financeRecords || getDefaultState().financeRecords,

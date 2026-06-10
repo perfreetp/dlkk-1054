@@ -4,7 +4,7 @@ import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import { useStore } from '@/store';
 import { formatPrice, formatDateTime, getOrderStatusText, getPaymentStatusText, getDeliveryStatusText } from '@/utils/format';
-import type { Order, OrderItem, ReturnItem, PaymentRecord } from '@/types';
+import type { Order, OrderItem, ReturnItem, PaymentRecord, Product } from '@/types';
 
 type ReturnType = 'return' | 'exchange';
 
@@ -14,6 +14,7 @@ const OrderDetailPage: React.FC = () => {
   const [version, setVersion] = useState(0);
 
   const orders = useStore((s) => s.orders);
+  const allProducts = useStore((s) => s.products);
   const allOrders = orders;
   const addPayment = useStore((s) => s.addPayment);
   const addReturnRecord = useStore((s) => s.addReturnRecord);
@@ -112,7 +113,7 @@ const OrderDetailPage: React.FC = () => {
   };
 
   const handleExchange = () => {
-    showReturnFlow('exchange');
+    showExchangeFlow();
   };
 
   const showReturnFlow = (type: ReturnType) => {
@@ -122,6 +123,106 @@ const OrderDetailPage: React.FC = () => {
         const idx = res.tapIndex;
         const item = order.items[idx];
         openReturnForm(type, item);
+      },
+    });
+  };
+
+  const showExchangeFlow = () => {
+    Taro.showActionSheet({
+      itemList: order.items.map((it) => `退回：${it.productName}(${it.model}) 数量${it.quantity}`),
+      success: (res) => {
+        const idx = res.tapIndex;
+        const returnItem = order.items[idx];
+        askReturnQty(returnItem);
+      },
+    });
+  };
+
+  const askReturnQty = (returnItem: OrderItem) => {
+    Taro.showModal({
+      title: '换货：退回数量',
+      editable: true,
+      placeholderText: `最多${returnItem.quantity}件`,
+      content: String(returnItem.quantity),
+      success: (res) => {
+        if (!res.confirm) return;
+        const qty = Number((res as any).content);
+        if (!qty || qty <= 0 || qty > returnItem.quantity) {
+          Taro.showToast({ title: '数量无效', icon: 'none' });
+          return;
+        }
+        const retItem: ReturnItem = {
+          productId: returnItem.productId,
+          productName: returnItem.productName,
+          model: returnItem.model,
+          quantity: qty,
+          price: returnItem.price,
+          amount: qty * returnItem.price,
+        };
+        pickExchangeProduct(retItem);
+      },
+    });
+  };
+
+  const pickExchangeProduct = (retItem: ReturnItem) => {
+    const list = allProducts.slice(0, 20).map((p) => `${p.name}(${p.model}) 库存${p.stock}`);
+    Taro.showActionSheet({
+      itemList: list,
+      success: (res) => {
+        const p = allProducts[res.tapIndex];
+        askExchangeQty(retItem, p);
+      },
+    });
+  };
+
+  const askExchangeQty = (retItem: ReturnItem, product: Product) => {
+    const tierPrice = useStore.getState().getTierPrice(product.id, 1);
+    const price = tierPrice || product.price;
+    Taro.showModal({
+      title: `换货：换出 ${product.name}`,
+      editable: true,
+      placeholderText: `请输入换出数量（库存${product.stock}）`,
+      content: String(retItem.quantity),
+      success: (res) => {
+        if (!res.confirm) return;
+        const qty = Number((res as any).content);
+        if (!qty || qty <= 0 || qty > product.stock) {
+          Taro.showToast({ title: '数量无效', icon: 'none' });
+          return;
+        }
+        const exItem: ReturnItem = {
+          productId: product.id,
+          productName: product.name,
+          model: product.model,
+          quantity: qty,
+          price,
+          amount: qty * price,
+        };
+        askExchangeReason(retItem, exItem);
+      },
+    });
+  };
+
+  const askExchangeReason = (retItem: ReturnItem, exItem: ReturnItem) => {
+    const diff = exItem.amount - retItem.amount;
+    Taro.showModal({
+      title: '换货原因',
+      editable: true,
+      placeholderText: `差额：${diff >= 0 ? '客户补' : '退客户'}￥${Math.abs(diff).toFixed(2)}`,
+      content: '',
+      success: (res) => {
+        if (!res.confirm) return;
+        const reason = (res as any).content || '未填写';
+        const diff = exItem.amount - retItem.amount;
+        addReturnRecord(order.id, {
+          type: 'exchange',
+          items: [retItem],
+          exchangeItems: [exItem],
+          reason,
+          refundAmount: diff,
+        });
+        Taro.showToast({ title: '换货已登记', icon: 'success' });
+        setTimeout(refresh, 300);
       },
     });
   };
@@ -328,59 +429,82 @@ const OrderDetailPage: React.FC = () => {
             <Text className={styles.sectionCount}>{order.returnRecords.length}笔</Text>
           </View>
           <View className={styles.returnList}>
-            {order.returnRecords.map((r) => (
-              <View key={r.id} className={styles.returnCard}>
-                <View className={styles.returnHeader}>
-                  <View
-                    className={`${styles.returnBadge} ${
-                      r.type === 'return' ? styles.returnBadgeRet : styles.returnBadgeExc
-                    }`}
-                  >
-                    <Text>{r.type === 'return' ? '退货' : '换货'}</Text>
+            {order.returnRecords.map((r) => {
+              const isReturn = r.type === 'return';
+              const diff = r.refundAmount;
+              return (
+                <View key={r.id} className={styles.returnCard}>
+                  <View className={styles.returnHeader}>
+                    <View
+                      className={`${styles.returnBadge} ${
+                        isReturn ? styles.returnBadgeRet : styles.returnBadgeExc
+                      }`}
+                    >
+                      <Text>{isReturn ? '退货' : '换货'}</Text>
+                    </View>
+                    <View
+                      className={`${styles.returnStatus} ${
+                        r.status === 'completed' ? styles.statusDone : styles.statusPending
+                      }`}
+                    >
+                      <Text>{r.status === 'completed' ? '已完成' : '待处理'}</Text>
+                    </View>
                   </View>
-                  <View
-                    className={`${styles.returnStatus} ${
-                      r.status === 'completed' ? styles.statusDone : styles.statusPending
-                    }`}
-                  >
-                    <Text>{r.status === 'completed' ? '已完成' : '待处理'}</Text>
+                  {!isReturn && (
+                    <Text className={styles.returnSubTitle}>退回商品</Text>
+                  )}
+                  {r.items.map((it, i) => (
+                    <View key={`ret-${i}`} className={styles.returnItemRow}>
+                      <Text className={styles.returnItemName}>
+                        {it.productName} ×{it.quantity}
+                      </Text>
+                      <Text className={styles.returnItemAmount}>
+                        {formatPrice(it.amount)}
+                      </Text>
+                    </View>
+                  ))}
+                  {!isReturn && r.exchangeItems.length > 0 && (
+                    <>
+                      <Text className={styles.returnSubTitle}>换出商品</Text>
+                      {r.exchangeItems.map((it, i) => (
+                        <View key={`ex-${i}`} className={styles.returnItemRow}>
+                          <Text className={styles.returnItemName}>
+                            {it.productName} ×{it.quantity}
+                          </Text>
+                          <Text className={styles.returnItemAmount}>
+                            {formatPrice(it.amount)}
+                          </Text>
+                        </View>
+                      ))}
+                    </>
+                  )}
+                  <View className={styles.returnRow}>
+                    <Text className={styles.returnLabel}>原因</Text>
+                    <Text className={styles.returnValue}>{r.reason}</Text>
                   </View>
-                </View>
-                {r.items.map((it, i) => (
-                  <View key={i} className={styles.returnItemRow}>
-                    <Text className={styles.returnItemName}>
-                      {it.productName} ×{it.quantity}
+                  <View className={styles.returnRow}>
+                    <Text className={styles.returnLabel}>
+                      {isReturn ? '退款金额' : '差额'}
                     </Text>
-                    <Text className={styles.returnItemAmount}>
-                      {formatPrice(it.amount)}
+                    <Text className={`${styles.returnValue} ${diff >= 0 ? styles.incomeColor : styles.expenseColor}`}>
+                      {diff >= 0 ? '+' : ''}{formatPrice(diff)}
+                      {!isReturn && ` ${diff >= 0 ? '（客户补）' : '（退客户）'}`}
                     </Text>
                   </View>
-                ))}
-                <View className={styles.returnRow}>
-                  <Text className={styles.returnLabel}>原因</Text>
-                  <Text className={styles.returnValue}>{r.reason}</Text>
-                </View>
-                <View className={styles.returnRow}>
-                  <Text className={styles.returnLabel}>
-                    {r.type === 'return' ? '退款金额' : '补差金额'}
-                  </Text>
-                  <Text className={`${styles.returnValue} ${styles.expenseColor}`}>
-                    -{formatPrice(r.refundAmount)}
-                  </Text>
-                </View>
-                <View className={styles.returnRow}>
-                  <Text className={styles.returnLabel}>登记时间</Text>
-                  <Text className={styles.returnValue}>
-                    {formatDateTime(r.createdAt)}
-                  </Text>
-                </View>
-                {r.status !== 'completed' && (
-                  <View className={styles.returnAction} onClick={() => handleProcessReturn(r.id)}>
-                    <Text>确认处理</Text>
+                  <View className={styles.returnRow}>
+                    <Text className={styles.returnLabel}>登记时间</Text>
+                    <Text className={styles.returnValue}>
+                      {formatDateTime(r.createdAt)}
+                    </Text>
                   </View>
-                )}
-              </View>
-            ))}
+                  {r.status !== 'completed' && (
+                    <View className={styles.returnAction} onClick={() => handleProcessReturn(r.id)}>
+                      <Text>确认处理</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
           </View>
         </View>
       )}
