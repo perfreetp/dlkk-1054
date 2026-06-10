@@ -1,0 +1,300 @@
+@use '@/styles/variables.scss' as *;
+
+.detailPage {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: 180rpx;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+  padding: 48rpx $page-padding;
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatarText {
+  font-size: 48rpx;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+}
+
+.customerInfo {
+  flex: 1;
+  margin-left: $spacing-lg;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.customerName {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+}
+
+.levelTag {
+  background-color: rgba(255, 255, 255, 0.25);
+  padding: 4rpx 16rpx;
+  border-radius: $radius-xs;
+  margin-left: $spacing-sm;
+}
+
+.levelText {
+  font-size: $font-size-xs;
+  color: $color-text-white;
+}
+
+.company {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.group {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.8);
+  display: block;
+}
+
+.statsSection {
+  display: flex;
+  background-color: $color-bg-card;
+  margin: -20rpx $page-padding $spacing-md;
+  border-radius: $radius-lg;
+  padding: $spacing-lg 0;
+  box-shadow: $shadow-card;
+  position: relative;
+  z-index: 2;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+}
+
+.statValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  display: block;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.statDivider {
+  width: 1rpx;
+  height: 60rpx;
+  background-color: $color-divider;
+  align-self: center;
+}
+
+.creditSection {
+  background-color: $color-bg-card;
+  margin-bottom: $spacing-md;
+  padding: $spacing-lg;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.warnTag {
+  background-color: #fff7e8;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+}
+
+.warnText {
+  font-size: $font-size-xs;
+  color: $color-warning;
+}
+
+.creditInfo {
+  margin-bottom: $spacing-md;
+}
+
+.creditRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.creditLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.creditValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.warningText {
+  color: $color-warning;
+}
+
+.progressBar {
+  height: 12rpx;
+  background-color: $color-bg-hover;
+  border-radius: 6rpx;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: $color-primary;
+  border-radius: 6rpx;
+  transition: width $transition-base;
+
+  &.progressWarning {
+    background-color: $color-warning;
+  }
+}
+
+.infoSection {
+  background-color: $color-bg-card;
+  margin-bottom: $spacing-md;
+  padding: $spacing-lg;
+}
+
+.infoList {
+  .infoItem {
+    display: flex;
+    align-items: center;
+    padding: $spacing-md 0;
+    border-bottom: 1rpx solid $color-divider;
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    &:first-child {
+      padding-top: 0;
+    }
+  }
+}
+
+.infoIcon {
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+
+.infoContent {
+  flex: 1;
+  margin-left: $spacing-md;
+  min-width: 0;
+}
+
+.infoLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.infoValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  display: block;
+}
+
+.infoAction {
+  flex-shrink: 0;
+  margin-left: $spacing-md;
+}
+
+.actionText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+}
+
+.remarkBox {
+  background-color: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+}
+
+.remarkText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: $color-bg-card;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  display: flex;
+  gap: $spacing-md;
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
+  z-index: 100;
+}
+
+.btn {
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &.btnOutline {
+    background-color: $color-bg-card;
+    border: 2rpx solid $color-border;
+    color: $color-text-secondary;
+  }
+
+  &.btnPrimary {
+    background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+    color: $color-text-white;
+  }
+}

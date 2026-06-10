@@ -1,0 +1,304 @@
+@use '@/styles/variables.scss' as *;
+
+.inventoryPage {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  display: flex;
+  flex-direction: column;
+}
+
+.searchBar {
+  background-color: $color-bg-card;
+  padding: $spacing-md $page-padding;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.searchInputWrapper {
+  display: flex;
+  align-items: center;
+  background-color: $color-bg-page;
+  border-radius: $radius-button;
+  padding: 0 $spacing-lg;
+  height: $button-height-sm;
+}
+
+.searchIcon {
+  font-size: $font-size-md;
+  margin-right: $spacing-sm;
+}
+
+.searchInput {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.statsRow {
+  display: flex;
+  background-color: $color-bg-card;
+  padding: $spacing-lg $page-padding;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.statItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statValue {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  line-height: 1.2;
+}
+
+.warningValue {
+  color: $color-warning;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
+
+.tabBar {
+  display: flex;
+  background-color: $color-bg-card;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.tabItem {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md 0;
+  position: relative;
+}
+
+.tabActive {
+  .tabText {
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48rpx;
+    height: 6rpx;
+    background-color: $color-primary;
+    border-radius: 3rpx;
+  }
+}
+
+.tabText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+.contentScroll {
+  flex: 1;
+  padding-bottom: 160rpx;
+}
+
+.stockList {
+  padding: $spacing-md $page-padding;
+}
+
+.stockCard {
+  display: flex;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.productImage {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+  background-color: $color-bg-hover;
+}
+
+.productInfo {
+  flex: 1;
+  margin-left: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.productTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.productName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  @include text-ellipsis;
+  flex: 1;
+}
+
+.warnTag {
+  background-color: #fff7e8;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+  margin-left: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.warnText {
+  font-size: $font-size-xs;
+  color: $color-warning;
+}
+
+.productModel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.productBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stockInfo {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.stockWarning {
+  color: $color-warning;
+  font-weight: $font-weight-medium;
+}
+
+.location {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.restockList {
+  padding: $spacing-md $page-padding;
+}
+
+.restockCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.restockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.restockProduct {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.statusTag {
+  padding: 4rpx 16rpx;
+  border-radius: $radius-xs;
+}
+
+.statusCompleted {
+  background-color: #e8ffea;
+}
+
+.statusPending {
+  background-color: #fff7e8;
+}
+
+.statusText {
+  font-size: $font-size-xs;
+
+  .statusCompleted & {
+    color: #00b42a;
+  }
+
+  .statusPending & {
+    color: $color-warning;
+  }
+}
+
+.restockInfo {
+  .infoRow {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: $spacing-sm;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .infoLabel {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+  }
+
+  .infoValue {
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+  }
+}
+
+.addFab {
+  position: fixed;
+  right: $page-padding;
+  bottom: 120rpx;
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(255, 122, 0, 0.4);
+  z-index: 100;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.addIcon {
+  font-size: 44rpx;
+  color: $color-text-white;
+  font-weight: $font-weight-normal;
+  line-height: 1;
+}
+
+.addText {
+  font-size: $font-size-xs;
+  color: $color-text-white;
+  margin-top: 4rpx;
+}

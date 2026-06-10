@@ -1,0 +1,106 @@
+@use '@/styles/variables.scss' as *;
+
+.customersPage {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.searchSection {
+  padding: $spacing-md $page-padding;
+  background-color: $color-bg-card;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  background-color: $color-bg-page;
+  border-radius: $radius-button;
+  padding: 0 $spacing-lg;
+  height: 72rpx;
+
+  .searchIcon {
+    font-size: 28rpx;
+    margin-right: $spacing-sm;
+  }
+
+  .searchInput {
+    flex: 1;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    background: transparent;
+    border: none;
+    outline: none;
+  }
+}
+
+.groupTabs {
+  display: flex;
+  padding: 0 $page-padding;
+  background-color: $color-bg-card;
+  padding-bottom: $spacing-md;
+  gap: $spacing-sm;
+  overflow-x: auto;
+  white-space: nowrap;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.groupTab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 28rpx;
+  border-radius: $radius-button;
+  background-color: $color-bg-page;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  flex-shrink: 0;
+  transition: all $transition-base;
+
+  &.active {
+    background-color: $color-primary;
+    color: $color-text-white;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.customerList {
+  padding: $spacing-md $page-padding;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.addButton {
+  position: fixed;
+  bottom: 120rpx;
+  right: $page-padding;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: $shadow-popup;
+  z-index: 100;
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .addIcon {
+    font-size: 48rpx;
+    color: $color-text-white;
+    font-weight: $font-weight-bold;
+  }
+}

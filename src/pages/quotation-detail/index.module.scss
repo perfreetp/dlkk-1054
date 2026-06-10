@@ -1,0 +1,258 @@
+@use '@/styles/variables.scss' as *;
+
+.detailPage {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: 180rpx;
+}
+
+.statusHeader {
+  background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+  padding: 48rpx $page-padding;
+  color: $color-text-white;
+}
+
+.statusTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  display: block;
+}
+
+.statusDesc {
+  font-size: $font-size-sm;
+  opacity: 0.9;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.quotationInfo {
+  background-color: $color-bg-card;
+  margin: -20rpx $page-padding $spacing-md;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  position: relative;
+  z-index: 2;
+}
+
+.infoRow {
+  display: flex;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.infoLabel {
+  width: 140rpx;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.section {
+  background-color: $color-bg-card;
+  margin-bottom: $spacing-md;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.itemCount {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.goodsList {
+  padding: 0 $spacing-lg;
+}
+
+.goodsItem {
+  display: flex;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.goodsImage {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+  background-color: $color-bg-hover;
+}
+
+.goodsInfo {
+  flex: 1;
+  margin-left: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.goodsName {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  @include text-ellipsis;
+}
+
+.goodsModel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.goodsBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.goodsPrice {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.goodsQty {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex: 1;
+  text-align: center;
+}
+
+.goodsAmount {
+  font-size: $font-size-md;
+  color: $color-price;
+  font-weight: $font-weight-semibold;
+}
+
+.amountSection {
+  padding: $spacing-md $spacing-lg;
+}
+
+.amountRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .label {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+
+  .value {
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+  }
+}
+
+.totalRow {
+  padding-top: $spacing-md;
+  margin-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+
+  .label {
+    font-size: $font-size-md;
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+  }
+
+  .value {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $color-price;
+  }
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: $color-bg-card;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  display: flex;
+  gap: $spacing-md;
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
+  z-index: 100;
+}
+
+.btn {
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &.btnOutline {
+    background-color: $color-bg-card;
+    border: 2rpx solid $color-border;
+    color: $color-text-secondary;
+  }
+
+  &.btnPrimary {
+    background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+    color: $color-text-white;
+  }
+}
+
+.statusDraft {
+  background-color: #f2f3f5;
+  color: #86909c;
+}
+
+.statusSent {
+  background-color: #e8f3ff;
+  color: #2b6cff;
+}
+
+.statusAccepted {
+  background-color: #e8ffea;
+  color: #00b42a;
+}
+
+.statusRejected {
+  background-color: #ffece8;
+  color: #f53f3f;
+}
+
+.statusExpired {
+  background-color: #fff7e8;
+  color: #ff7d00;
+}

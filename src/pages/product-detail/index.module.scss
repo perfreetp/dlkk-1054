@@ -1,0 +1,199 @@
+@use '@/styles/variables.scss' as *;
+
+.detailPage {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: 140rpx;
+}
+
+.productImage {
+  width: 100%;
+  height: 500rpx;
+  background-color: $color-bg-card;
+}
+
+.productInfo {
+  background-color: $color-bg-card;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+}
+
+.productName {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  line-height: 1.4;
+  display: block;
+}
+
+.productModel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  margin-top: $spacing-md;
+}
+
+.priceLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-right: $spacing-sm;
+}
+
+.priceValue {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-price;
+}
+
+.stockInfo {
+  display: flex;
+  align-items: center;
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+}
+
+.stockItem {
+  flex: 1;
+  text-align: center;
+
+  .stockValue {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    display: block;
+
+    &.warning {
+      color: $color-error;
+    }
+  }
+
+  .stockLabel {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    margin-top: 6rpx;
+    display: block;
+  }
+}
+
+.section {
+  background-color: $color-bg-card;
+  margin-bottom: $spacing-md;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.specList {
+  padding: 0 $spacing-lg;
+}
+
+.specItem {
+  display: flex;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.specLabel {
+  width: 180rpx;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.specValue {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.tierList {
+  padding: $spacing-md $spacing-lg;
+}
+
+.tierItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm 0;
+}
+
+.tierQty {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.tierPrice {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-price;
+}
+
+.descContent {
+  padding: $spacing-md $spacing-lg;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.8;
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: $color-bg-card;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  display: flex;
+  gap: $spacing-md;
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
+  z-index: 100;
+}
+
+.btn {
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &.btnOutline {
+    background-color: $color-bg-card;
+    border: 2rpx solid $color-primary;
+    color: $color-primary;
+  }
+
+  &.btnPrimary {
+    background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+    color: $color-text-white;
+  }
+}

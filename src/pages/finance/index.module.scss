@@ -1,0 +1,326 @@
+@use '@/styles/variables.scss' as *;
+
+.financePage {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  display: flex;
+  flex-direction: column;
+}
+
+.summarySection {
+  background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+  padding: $spacing-xl $page-padding;
+  color: $color-text-white;
+}
+
+.summaryGradient {
+  text-align: center;
+  margin-bottom: $spacing-lg;
+}
+
+.summaryLabel {
+  font-size: $font-size-sm;
+  opacity: 0.9;
+  display: block;
+}
+
+.summaryProfit {
+  font-size: 56rpx;
+  font-weight: $font-weight-bold;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.summaryGrid {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-lg;
+  padding: $spacing-md 0;
+  margin-bottom: $spacing-md;
+}
+
+.summaryItem {
+  flex: 1;
+  text-align: center;
+}
+
+.summaryItemLabel {
+  font-size: $font-size-xs;
+  opacity: 0.85;
+  display: block;
+}
+
+.summaryItemValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.incomeColor {
+  color: #e8ffea;
+}
+
+.expenseColor {
+  color: #ffece8;
+}
+
+.summaryDivider {
+  width: 1rpx;
+  height: 60rpx;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.summaryExtra {
+  display: flex;
+  justify-content: space-around;
+}
+
+.extraItem {
+  text-align: center;
+}
+
+.extraValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  display: block;
+}
+
+.extraLabel {
+  font-size: $font-size-xs;
+  opacity: 0.85;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.tabBar {
+  display: flex;
+  background-color: $color-bg-card;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.tabItem {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md 0;
+  position: relative;
+}
+
+.tabActive {
+  .tabText {
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48rpx;
+    height: 6rpx;
+    background-color: $color-primary;
+    border-radius: 3rpx;
+  }
+}
+
+.tabText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+.contentScroll {
+  flex: 1;
+}
+
+.recordsList {
+  padding: $spacing-md $page-padding;
+}
+
+.recordCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-sm;
+  box-shadow: $shadow-card;
+}
+
+.recordLeft {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.recordIcon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.incomeIcon {
+  background-color: #e8ffea;
+}
+
+.expenseIcon {
+  background-color: #ffece8;
+}
+
+.iconText {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+
+  .incomeIcon & {
+    color: #00b42a;
+  }
+
+  .expenseIcon & {
+    color: #f53f3f;
+  }
+}
+
+.recordInfo {
+  margin-left: $spacing-md;
+  flex: 1;
+  min-width: 0;
+}
+
+.recordTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+}
+
+.recordDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+  display: block;
+  @include text-ellipsis;
+}
+
+.recordOrder {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.recordRight {
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: $spacing-md;
+}
+
+.recordAmount {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  display: block;
+}
+
+.incomeText {
+  color: #00b42a;
+}
+
+.expenseText {
+  color: #f53f3f;
+}
+
+.recordDate {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.rankingList {
+  padding: $spacing-md $page-padding;
+}
+
+.rankingItem {
+  display: flex;
+  align-items: center;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-sm;
+  box-shadow: $shadow-card;
+}
+
+.rankBadge {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $color-bg-hover;
+  flex-shrink: 0;
+}
+
+.rankGold {
+  background: linear-gradient(135deg, #ffd700, #ffb800);
+}
+
+.rankSilver {
+  background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
+}
+
+.rankBronze {
+  background: linear-gradient(135deg, #cd7f32, #b87333);
+}
+
+.rankText {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: $color-text-secondary;
+
+  .rankGold &,
+  .rankSilver &,
+  .rankBronze & {
+    color: $color-text-white;
+  }
+}
+
+.rankingInfo {
+  flex: 1;
+  margin-left: $spacing-md;
+  min-width: 0;
+}
+
+.rankingName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+}
+
+.rankingSub {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.rankingAmount {
+  flex-shrink: 0;
+  margin-left: $spacing-md;
+}
+
+.amountText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-price;
+}

@@ -1,0 +1,132 @@
+import type { Customer } from '@/types';
+
+export const mockCustomers: Customer[] = [
+  {
+    id: '1',
+    name: '张伟',
+    phone: '13812345678',
+    company: '光明灯具城',
+    group: 'VIP客户',
+    level: 'A级',
+    creditLimit: 50000,
+    creditUsed: 15000,
+    totalOrders: 58,
+    totalAmount: 285600,
+    address: '浙江省杭州市拱墅区灯具市场A区15号',
+    remark: '合作3年老客户，价格按VIP价',
+    createdAt: '2021-03-15T00:00:00Z'
+  },
+  {
+    id: '2',
+    name: '王芳',
+    phone: '13987654321',
+    company: '佳美装饰设计',
+    group: '装修公司',
+    level: 'B级',
+    creditLimit: 30000,
+    creditUsed: 8000,
+    totalOrders: 32,
+    totalAmount: 156800,
+    address: '浙江省杭州市西湖区古墩路88号',
+    remark: '装修公司，订单稳定',
+    createdAt: '2022-05-20T00:00:00Z'
+  },
+  {
+    id: '3',
+    name: '刘强',
+    phone: '13700001111',
+    company: '星辰酒店管理',
+    group: '工程客户',
+    level: 'A级',
+    creditLimit: 100000,
+    creditUsed: 45000,
+    totalOrders: 12,
+    totalAmount: 520000,
+    address: '浙江省杭州市滨江区江南大道200号',
+    remark: '酒店工程大客户，订单金额大',
+    createdAt: '2023-01-10T00:00:00Z'
+  },
+  {
+    id: '4',
+    name: '陈静',
+    phone: '13622223333',
+    company: '美居软装生活馆',
+    group: '零售客户',
+    level: 'C级',
+    creditLimit: 5000,
+    creditUsed: 0,
+    totalOrders: 18,
+    totalAmount: 42500,
+    address: '浙江省杭州市余杭区文一西路998号',
+    remark: '零售散客，量小但频次高',
+    createdAt: '2022-08-05T00:00:00Z'
+  },
+  {
+    id: '5',
+    name: '赵磊',
+    phone: '13544445555',
+    company: '鑫辉建筑工程',
+    group: '工程客户',
+    level: 'A级',
+    creditLimit: 80000,
+    creditUsed: 62000,
+    totalOrders: 25,
+    totalAmount: 368000,
+    address: '浙江省杭州市萧山区建设一路100号',
+    remark: '月结客户，每月25号对账',
+    createdAt: '2021-11-20T00:00:00Z'
+  },
+  {
+    id: '6',
+    name: '孙丽',
+    phone: '13466667777',
+    company: '雅居灯饰',
+    group: 'VIP客户',
+    level: 'B级',
+    creditLimit: 40000,
+    creditUsed: 12000,
+    totalOrders: 45,
+    totalAmount: 198500,
+    address: '浙江省宁波市鄞州区灯具市场B区22号',
+    remark: '宁波老客户，每月补货',
+    createdAt: '2021-06-30T00:00:00Z'
+  },
+  {
+    id: '7',
+    name: '周杰',
+    phone: '13388889999',
+    company: '尚品室内设计',
+    group: '装修公司',
+    level: 'B级',
+    creditLimit: 25000,
+    creditUsed: 25000,
+    totalOrders: 20,
+    totalAmount: 89600,
+    address: '浙江省杭州市下城区凤起路333号',
+    remark: '赊账已达上限，需要催款',
+    createdAt: '2022-09-12T00:00:00Z'
+  },
+  {
+    id: '8',
+    name: '吴敏',
+    phone: '13210102020',
+    company: '华丰五金建材',
+    group: '零售客户',
+    level: 'C级',
+    creditLimit: 3000,
+    creditUsed: 0,
+    totalOrders: 8,
+    totalAmount: 15600,
+    address: '浙江省杭州市江干区德胜东路288号',
+    remark: '建材店顺带卖灯',
+    createdAt: '2023-04-18T00:00:00Z'
+  }
+];
+
+export const customerGroups = [
+  { id: 'all', name: '全部客户', count: 0 },
+  { id: 'VIP客户', name: 'VIP客户', count: 0 },
+  { id: '工程客户', name: '工程客户', count: 0 },
+  { id: '装修公司', name: '装修公司', count: 0 },
+  { id: '零售客户', name: '零售客户', count: 0 }
+];

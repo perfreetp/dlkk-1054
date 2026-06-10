@@ -1,0 +1,199 @@
+@use '@/styles/variables.scss' as *;
+
+.homePage {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+  padding: 40rpx $page-padding 80rpx;
+  position: relative;
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32rpx;
+}
+
+.shopName {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+}
+
+.messageIcon {
+  position: relative;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+
+  .badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 28rpx;
+    height: 28rpx;
+    padding: 0 6rpx;
+    background-color: $color-error;
+    border-radius: $radius-round;
+    font-size: 20rpx;
+    color: $color-text-white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: $radius-button;
+  padding: 0 $spacing-lg;
+  height: 72rpx;
+
+  .searchIcon {
+    font-size: 28rpx;
+    margin-right: $spacing-sm;
+  }
+
+  .searchText {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+    flex: 1;
+  }
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+  padding: 0 $page-padding;
+  margin-top: -40rpx;
+  margin-bottom: $spacing-lg;
+  position: relative;
+  z-index: 2;
+}
+
+.statItem {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+  text-align: center;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.statValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  line-height: 1.2;
+  display: block;
+
+  &.primary { color: $color-primary; }
+  &.success { color: $color-success; }
+  &.warning { color: $color-warning; }
+  &.error { color: $color-error; }
+  &.info { color: $color-info; }
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.quickActions {
+  margin: 0 $page-padding $spacing-lg;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.titleText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.moreLink {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md 0;
+}
+
+.actionItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.actionIcon {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  margin-bottom: $spacing-sm;
+
+  &.color1 { background-color: #FFF1E6; }
+  &.color2 { background-color: #E6F4FF; }
+  &.color3 { background-color: #E8F8EE; }
+  &.color4 { background-color: #FFF0F0; }
+  &.color5 { background-color: #F5F0FF; }
+  &.color6 { background-color: #FFF8E6; }
+  &.color7 { background-color: #E6FAFF; }
+  &.color8 { background-color: #FFF0F6; }
+}
+
+.actionLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  text-align: center;
+}
+
+.todayOrders {
+  margin: 0 $page-padding;
+}
+
+.orderList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}

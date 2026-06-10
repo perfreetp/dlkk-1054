@@ -1,0 +1,140 @@
+@use '@/styles/variables.scss' as *;
+
+.customerCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  padding: $spacing-lg;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.customerHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatarText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+}
+
+.customerInfo {
+  flex: 1;
+  margin-left: $spacing-md;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6rpx;
+}
+
+.customerName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-right: $spacing-sm;
+}
+
+.levelTag {
+  padding: 2rpx 10rpx;
+  border-radius: $radius-xs;
+
+  &.levelA {
+    background-color: rgba($color-primary, 0.1);
+    .levelText { color: $color-primary; }
+  }
+  &.levelB {
+    background-color: rgba($color-info, 0.1);
+    .levelText { color: $color-info; }
+  }
+  &.levelC {
+    background-color: rgba($color-text-tertiary, 0.1);
+    .levelText { color: $color-text-tertiary; }
+  }
+}
+
+.levelText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.company {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  @include text-ellipsis;
+  display: block;
+}
+
+.phone {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.customerStats {
+  display: flex;
+  justify-content: space-around;
+  padding: $spacing-md 0;
+  border-top: 1rpx solid $color-divider;
+  border-bottom: 1rpx solid $color-divider;
+  margin-bottom: $spacing-md;
+}
+
+.statItem {
+  text-align: center;
+  flex: 1;
+}
+
+.statValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+
+  &.warning {
+    color: $color-error;
+  }
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 6rpx;
+  display: block;
+}
+
+.customerFooter {
+  display: flex;
+  align-items: center;
+}
+
+.groupTag {
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+  background-color: $color-tag-bg;
+}
+
+.groupText {
+  font-size: $font-size-xs;
+  color: $color-tag-text;
+}

@@ -1,0 +1,103 @@
+@use '@/styles/variables.scss' as *;
+
+.statCard {
+  display: flex;
+  align-items: center;
+  padding: $spacing-lg;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &.primary {
+    .iconWrapper {
+      background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+    }
+    .value {
+      color: $color-primary;
+    }
+  }
+
+  &.success {
+    .iconWrapper {
+      background: linear-gradient(135deg, #34d399, $color-success);
+    }
+    .value {
+      color: $color-success;
+    }
+  }
+
+  &.warning {
+    .iconWrapper {
+      background: linear-gradient(135deg, #fbbf24, $color-warning);
+    }
+    .value {
+      color: $color-warning;
+    }
+  }
+
+  &.error {
+    .iconWrapper {
+      background: linear-gradient(135deg, #f87171, $color-error);
+    }
+    .value {
+      color: $color-error;
+    }
+  }
+
+  &.info {
+    .iconWrapper {
+      background: linear-gradient(135deg, #60a5fa, $color-info);
+    }
+    .value {
+      color: $color-info;
+    }
+  }
+}
+
+.iconWrapper {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.icon {
+  font-size: 36rpx;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.value {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  display: block;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  display: block;
+}

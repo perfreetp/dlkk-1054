@@ -1,0 +1,155 @@
+@use '@/styles/variables.scss' as *;
+
+.orderCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  padding: $spacing-lg;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.orderHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.orderNo {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.statusTag {
+  padding: 6rpx 16rpx;
+  border-radius: $radius-xs;
+
+  &.statusWarning {
+    background-color: rgba($color-warning, 0.1);
+    .statusText { color: $color-warning; }
+  }
+  &.statusInfo {
+    background-color: rgba($color-info, 0.1);
+    .statusText { color: $color-info; }
+  }
+  &.statusPrimary {
+    background-color: rgba($color-primary, 0.1);
+    .statusText { color: $color-primary; }
+  }
+  &.statusSuccess {
+    background-color: rgba($color-success, 0.1);
+    .statusText { color: $color-success; }
+  }
+  &.statusDisabled {
+    background-color: $color-bg-hover;
+    .statusText { color: $color-text-tertiary; }
+  }
+}
+
+.statusText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.customerInfo {
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.customerName {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+}
+
+.salesman {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.orderItems {
+  margin-bottom: $spacing-md;
+}
+
+.orderItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.itemImage {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-sm;
+  flex-shrink: 0;
+  background-color: $color-bg-hover;
+}
+
+.itemInfo {
+  flex: 1;
+  margin-left: $spacing-sm;
+  min-width: 0;
+}
+
+.itemName {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  @include text-ellipsis;
+  display: block;
+}
+
+.itemSpec {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.moreItems {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.orderFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+}
+
+.orderTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.orderAmount {
+  display: flex;
+  align-items: baseline;
+}
+
+.amountLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.amountValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-price;
+}

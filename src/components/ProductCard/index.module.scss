@@ -1,0 +1,76 @@
+@use '@/styles/variables.scss' as *;
+
+.productCard {
+  display: flex;
+  padding: $spacing-md;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.productImage {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+  background-color: $color-bg-hover;
+}
+
+.productInfo {
+  flex: 1;
+  margin-left: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.productName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  @include text-ellipsis;
+}
+
+.productModel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
+
+.productBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: $spacing-sm;
+}
+
+.productPrice {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-price;
+}
+
+.stockTag {
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+  background-color: $color-tag-bg;
+
+  &.lowStock {
+    background-color: rgba($color-error, 0.1);
+
+    .stockText {
+      color: $color-error;
+    }
+  }
+}
+
+.stockText {
+  font-size: $font-size-xs;
+  color: $color-tag-text;
+}

@@ -1,0 +1,171 @@
+@use '@/styles/variables.scss' as *;
+
+.quotationPage {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.quotationList {
+  padding: $spacing-md $page-padding;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.quotationCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  padding: $spacing-lg;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.quotationNo {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.statusTag {
+  padding: 6rpx 16rpx;
+  border-radius: $radius-xs;
+
+  &.statusDraft {
+    background-color: $color-bg-hover;
+    color: $color-text-tertiary;
+  }
+  &.statusSent {
+    background-color: rgba($color-info, 0.1);
+    color: $color-info;
+  }
+  &.statusAccepted {
+    background-color: rgba($color-success, 0.1);
+    color: $color-success;
+  }
+  &.statusRejected {
+    background-color: rgba($color-error, 0.1);
+    color: $color-error;
+  }
+  &.statusExpired {
+    background-color: $color-bg-hover;
+    color: $color-text-tertiary;
+  }
+}
+
+.statusText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.customerInfo {
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+  margin-bottom: $spacing-md;
+}
+
+.customerName {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+}
+
+.validDate {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.quotationItems {
+  margin-bottom: $spacing-md;
+}
+
+.itemRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.itemName {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  @include text-ellipsis;
+}
+
+.itemQty {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-right: $spacing-md;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+}
+
+.createTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.totalAmount {
+  display: flex;
+  align-items: baseline;
+}
+
+.amountLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-right: $spacing-xs;
+}
+
+.amountValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-price;
+}
+
+.addFab {
+  position: fixed;
+  bottom: 120rpx;
+  right: $page-padding;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: $shadow-popup;
+  z-index: 100;
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .addIcon {
+    font-size: 48rpx;
+    color: $color-text-white;
+    font-weight: $font-weight-bold;
+  }
+}

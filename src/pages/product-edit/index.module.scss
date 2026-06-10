@@ -1,0 +1,127 @@
+@use '@/styles/variables.scss' as *;
+
+.editPage {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: 140rpx;
+}
+
+.formSection {
+  background-color: $color-bg-card;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  padding: $spacing-md $page-padding;
+  padding-bottom: $spacing-sm;
+}
+
+.formItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md $page-padding;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.formLabel {
+  width: 160rpx;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  flex-shrink: 0;
+}
+
+.formInput {
+  flex: 1;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  text-align: right;
+}
+
+.formInputText {
+  flex: 1;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  text-align: right;
+}
+
+.imageUpload {
+  padding: $spacing-md $page-padding;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.imageItem {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: $radius-md;
+  background-color: $color-bg-page;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  .uploadIcon {
+    font-size: 48rpx;
+    color: $color-text-tertiary;
+  }
+
+  .productImage {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.tierPriceItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm $page-padding;
+  gap: $spacing-sm;
+}
+
+.tierInput {
+  flex: 1;
+  height: 64rpx;
+  border: 1rpx solid $color-border;
+  border-radius: $radius-sm;
+  padding: 0 $spacing-sm;
+  font-size: $font-size-sm;
+  text-align: center;
+  color: $color-text-primary;
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: $color-bg-card;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
+  z-index: 100;
+}
+
+.saveBtn {
+  width: 100%;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
