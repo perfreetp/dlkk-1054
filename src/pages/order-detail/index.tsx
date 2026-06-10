@@ -140,16 +140,16 @@ const OrderDetailPage: React.FC = () => {
           Taro.showToast({ title: '数量无效', icon: 'none' });
           return;
         }
-        const defaultAmount = qty * item.price;
+        const defaultAmount = type === 'return' ? qty * item.price : 0;
         Taro.showModal({
           title: `${title}：${type === 'return' ? '退款' : '补差'}金额`,
           editable: true,
-          placeholderText: '默认按数量×单价计算',
+          placeholderText: type === 'return' ? '默认按数量×单价计算' : '正数=客户补差价  负数=退客户差价',
           content: String(defaultAmount),
           success: (res2) => {
             if (!res2.confirm) return;
             const amount = Number((res2 as any).content);
-            if (isNaN(amount) || amount < 0) {
+            if (isNaN(amount)) {
               Taro.showToast({ title: '金额无效', icon: 'none' });
               return;
             }

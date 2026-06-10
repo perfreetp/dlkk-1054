@@ -172,14 +172,26 @@ export const useStore = create<StoreState>((set, get) => ({
   addOrder: (orderData) => {
     const id = generateId();
     const now = new Date().toISOString();
+    const hasInitialDeposit = orderData.deposit > 0;
+    const normalizedOrder = hasInitialDeposit
+      ? {
+          ...orderData,
+          deposit: 0,
+          balance: orderData.totalAmount,
+          paymentStatus: 'unpaid' as const,
+        }
+      : orderData;
     const newOrder: Order = {
-      ...orderData,
+      ...normalizedOrder,
       id,
       createdAt: now,
       paymentRecords: [],
       returnRecords: [],
     };
     set((state) => ({ orders: [newOrder, ...state.orders] }));
+    if (hasInitialDeposit) {
+      get().addPayment(id, orderData.deposit, 'deposit', '开单订金');
+    }
     get().persist();
   },
 
@@ -428,7 +440,14 @@ export const useStore = create<StoreState>((set, get) => ({
         const updatedReturns = (o.returnRecords || []).map((r) =>
           r.id === returnId ? { ...r, status: 'completed' as const } : r
         );
-        const newTotal = Math.max(0, o.totalAmount - ret.refundAmount);
+
+        let newTotal: number;
+        if (ret.type === 'return') {
+          newTotal = Math.max(0, o.totalAmount - ret.refundAmount);
+        } else {
+          newTotal = Math.max(0, o.totalAmount + ret.refundAmount);
+        }
+
         const newDeposit = Math.min(o.deposit, newTotal);
         const newBalance = Math.max(0, newTotal - newDeposit);
         const newPaymentStatus: Order['paymentStatus'] =
@@ -444,39 +463,69 @@ export const useStore = create<StoreState>((set, get) => ({
       });
 
       const newProducts = s.products.map((p) => {
-        if (ret.type === 'return') {
-          const match = ret.items.find((it) => it.productId === p.id);
-          if (match) return { ...p, stock: p.stock + match.quantity };
-        }
+        const match = ret.items.find((it) => it.productId === p.id);
+        if (match) return { ...p, stock: p.stock + match.quantity };
         return p;
       });
 
       const newInventory = s.inventoryItems.map((item) => {
-        if (ret.type === 'return') {
-          const match = ret.items.find((it) => it.productId === item.productId);
-          if (match) return { ...item, stock: item.stock + match.quantity };
-        }
+        const match = ret.items.find((it) => it.productId === item.productId);
+        if (match) return { ...item, stock: item.stock + match.quantity };
         return item;
       });
 
-      const newFinance: FinanceRecord = {
-        id: financeId,
-        type: 'expense',
-        category: '退款支出',
-        amount: ret.refundAmount,
-        orderId,
-        orderNo: order.orderNo,
-        customerId: order.customerId,
-        customerName: order.customerName,
-        description: `${ret.type === 'return' ? '退货' : '换货'}退款 - ${ret.reason}`,
-        createdAt: now,
-      };
+      let financeRecords = s.financeRecords;
+      if (ret.type === 'return') {
+        const newFinance: FinanceRecord = {
+          id: financeId,
+          type: 'expense',
+          category: '退款支出',
+          amount: ret.refundAmount,
+          orderId,
+          orderNo: order.orderNo,
+          customerId: order.customerId,
+          customerName: order.customerName,
+          description: `退货退款 - ${ret.reason}`,
+          createdAt: now,
+        };
+        financeRecords = [newFinance, ...financeRecords];
+      } else if (ret.type === 'exchange') {
+        if (ret.refundAmount > 0) {
+          const newFinance: FinanceRecord = {
+            id: financeId,
+            type: 'income',
+            category: '换货补差收入',
+            amount: ret.refundAmount,
+            orderId,
+            orderNo: order.orderNo,
+            customerId: order.customerId,
+            customerName: order.customerName,
+            description: `换货补差 - ${ret.reason}`,
+            createdAt: now,
+          };
+          financeRecords = [newFinance, ...financeRecords];
+        } else if (ret.refundAmount < 0) {
+          const newFinance: FinanceRecord = {
+            id: financeId,
+            type: 'expense',
+            category: '换货退款支出',
+            amount: Math.abs(ret.refundAmount),
+            orderId,
+            orderNo: order.orderNo,
+            customerId: order.customerId,
+            customerName: order.customerName,
+            description: `换货退差价 - ${ret.reason}`,
+            createdAt: now,
+          };
+          financeRecords = [newFinance, ...financeRecords];
+        }
+      }
 
       return {
         orders: newOrders,
         products: newProducts,
         inventoryItems: newInventory,
-        financeRecords: [newFinance, ...s.financeRecords],
+        financeRecords,
       };
     });
     get().persist();
@@ -495,7 +544,16 @@ export const useStore = create<StoreState>((set, get) => ({
     return get().financeRecords.filter((r) => {
       if (dateFrom && r.createdAt.slice(0, 10) < dateFrom) return false;
       if (dateTo && r.createdAt.slice(0, 10) > dateTo) return false;
-      if (customerId && r.customerId !== customerId) return false;
+      if (customerId) {
+        const customer = get().customers.find((c) => c.id === customerId);
+        const customerMatch =
+          r.customerId === customerId ||
+          (customer && r.customerName &&
+            (r.customerName.includes(customer.name) ||
+              r.customerName.includes(customer.company) ||
+              customer.name.includes(r.customerName)));
+        if (!customerMatch) return false;
+      }
       if (orderNo && !(r.orderNo || '').includes(orderNo)) return false;
       return true;
     });
@@ -552,6 +610,11 @@ export const useStore = create<StoreState>((set, get) => ({
     lines.push(`💰 应收总额：￥${order.totalAmount.toFixed(2)}`);
     lines.push(`✅ 已收款：￥${order.deposit.toFixed(2)}`);
     lines.push(`⏳ 待收款：￥${order.balance.toFixed(2)}`);
+    let paymentStatusLabel = '';
+    if (order.paymentStatus === 'unpaid') paymentStatusLabel = '未收款';
+    else if (order.paymentStatus === 'partial') paymentStatusLabel = `部分收款（待收尾款￥${order.balance.toFixed(2)}）`;
+    else if (order.paymentStatus === 'paid') paymentStatusLabel = '已收清';
+    lines.push(`📌 款项状态：${paymentStatusLabel}`);
     if (order.remark) {
       lines.push('');
       lines.push(`备注：${order.remark}`);
@@ -584,6 +647,33 @@ export const useStore = create<StoreState>((set, get) => ({
     });
     lines.push('');
     lines.push(`💰 报价总额：￥${q.totalAmount.toFixed(2)}`);
+
+    let paymentInfo = '';
+    if (q.status === 'accepted') {
+      const linkedOrder = get().orders.find((o) => o.customerId === q.customerId && o.items.length === q.items.length
+        && o.totalAmount === q.totalAmount);
+      if (linkedOrder) {
+        let psLabel = '';
+        if (linkedOrder.paymentStatus === 'unpaid') psLabel = '未收款';
+        else if (linkedOrder.paymentStatus === 'partial') psLabel = `部分收款（待收￥${linkedOrder.balance.toFixed(2)}）`;
+        else psLabel = '已收清';
+        paymentInfo = `报价单已转为订单（${linkedOrder.orderNo}）\n款项状态：${psLabel}\n已收款：￥${linkedOrder.deposit.toFixed(2)}  待收款：￥${linkedOrder.balance.toFixed(2)}`;
+      } else {
+        paymentInfo = '报价单已确认，待开单后录入款项';
+      }
+    } else if (q.status === 'sent') {
+      paymentInfo = '报价单已发送客户，款项待确认';
+    } else if (q.status === 'draft') {
+      paymentInfo = '报价单（草稿） - 未正式生效';
+    } else if (q.status === 'rejected') {
+      paymentInfo = '报价单已被客户拒绝';
+    } else if (q.status === 'expired') {
+      paymentInfo = '报价单已过有效期';
+    }
+    if (paymentInfo) {
+      lines.push('');
+      lines.push(`📌 ${paymentInfo}`);
+    }
     if (q.remark) {
       lines.push('');
       lines.push(`备注：${q.remark}`);
