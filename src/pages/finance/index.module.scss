@@ -324,3 +324,162 @@
   font-weight: $font-weight-semibold;
   color: $color-price;
 }
+
+.filterCard {
+  margin: $spacing-md $page-padding 0;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.filterLabel {
+  width: 160rpx;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  flex-shrink: 0;
+}
+
+.filterDateGroup {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.dateInput {
+  flex: 1;
+  height: 64rpx;
+  line-height: 64rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: 0 $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  text-align: center;
+}
+
+.dateSplit {
+  margin: 0 $spacing-sm;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.filterPicker {
+  flex: 1;
+  height: 64rpx;
+  line-height: 64rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: 0 $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filterPickerText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.arrow {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.filterInput {
+  flex: 1;
+  height: 64rpx;
+  line-height: 64rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: 0 $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.filterActions {
+  margin-top: $spacing-md;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.resetBtn {
+  height: 60rpx;
+  padding: 0 $spacing-lg;
+  border-radius: $radius-md;
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resultCard {
+  margin: $spacing-md $page-padding 0;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.resultItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.resultLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 4rpx;
+}
+
+.resultValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.clickable {
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:active {
+    background: $color-bg-hover;
+  }
+}
+
+.tapHint {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: $color-primary;
+}
+
+.recordCustomer {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.empty {
+  padding: $spacing-xl 0;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}

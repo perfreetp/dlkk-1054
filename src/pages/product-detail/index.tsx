@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, Image, ScrollView } from '@tarojs/components';
 import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
@@ -8,15 +8,17 @@ import type { Product } from '@/types';
 
 const ProductDetailPage: React.FC = () => {
   const router = useRouter();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [version, setVersion] = useState(0);
+  const allProducts = useStore((s) => s.products);
 
   useDidShow(() => {
-    const id = router.params.id;
-    const found = useStore.getState().products.find(p => p.id === id);
-    if (found) {
-      setProduct(found);
-    }
+    setVersion((v) => v + 1);
   });
+
+  const product = useMemo(() => {
+    const id = router.params.id;
+    return allProducts.find((p) => p.id === id) || null;
+  }, [allProducts, router.params.id, version]);
 
   if (!product) {
     return (

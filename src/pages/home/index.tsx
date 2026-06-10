@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
@@ -9,40 +9,64 @@ import { formatPrice, formatNumber } from '@/utils/format';
 import type { Order } from '@/types';
 
 const HomePage: React.FC = () => {
-  const [todayOrders, setTodayOrders] = useState<Order[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [lowStockCount, setLowStockCount] = useState(0);
-  const [creditWarningCount, setCreditWarningCount] = useState(0);
-  const [todaySales, setTodaySales] = useState(0);
+  const [version, setVersion] = useState(0);
+
+  const orders = useStore((s) => s.orders);
+  const messages = useStore((s) => s.messages);
+  const inventoryItems = useStore((s) => s.inventoryItems);
+  const customers = useStore((s) => s.customers);
+  const financeRecords = useStore((s) => s.financeRecords);
 
   useDidShow(() => {
-    loadData();
+    setVersion((v) => v + 1);
   });
 
-  const loadData = () => {
-    const store = useStore.getState();
-    setTodayOrders(store.orders.slice(0, 3));
-
-    const unread = store.messages.filter(m => !m.isRead).length;
-    setUnreadCount(unread);
-
-    const lowStock = store.inventoryItems.filter(item => item.stock <= item.warnStock).length;
-    setLowStockCount(lowStock);
-
-    const creditWarning = store.customers.filter(c => c.creditUsed >= c.creditLimit * 0.8).length;
-    setCreditWarningCount(creditWarning);
-
-    const todayIncome = store.financeRecords
-      .filter(r => r.type === 'income')
+  const stats = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const todaysOrders = orders.filter(
+      (o) => o.createdAt.slice(0, 10) === today
+    );
+    const unread = messages.filter((m) => !m.isRead).length;
+    const lowStock = inventoryItems.filter(
+      (item) => item.stock <= item.warnStock
+    ).length;
+    const creditWarning = customers.filter(
+      (c) => c.creditUsed >= c.creditLimit * 0.8
+    ).length;
+    const todayIncome = financeRecords
+      .filter((r) => r.type === 'income' && r.createdAt.slice(0, 10) === today)
       .reduce((sum, r) => sum + r.amount, 0);
-    setTodaySales(todayIncome);
-  };
+    const monthIncome = financeRecords
+      .filter(
+        (r) =>
+          r.type === 'income' &&
+          r.createdAt.slice(0, 7) === today.slice(0, 7)
+      )
+      .reduce((sum, r) => sum + r.amount, 0);
+    return {
+      todayOrders: orders.slice(0, 3),
+      todayOrdersCount: todaysOrders.length,
+      unread,
+      lowStock,
+      creditWarning,
+      todaySales: todayIncome,
+      monthSales: monthIncome,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    orders,
+    messages,
+    inventoryItems,
+    customers,
+    financeRecords,
+    version,
+  ]);
 
   const handlePullDownRefresh = () => {
-    loadData();
+    setVersion((v) => v + 1);
     setTimeout(() => {
       Taro.stopPullDownRefresh();
-    }, 1000);
+    }, 800);
   };
 
   const handleActionClick = (action: string) => {
@@ -70,7 +94,7 @@ const HomePage: React.FC = () => {
         break;
       case 'logistics':
         Taro.makePhoneCall({
-          phoneNumber: '13800138000'
+          phoneNumber: '13800138000',
         }).catch(() => {
           Taro.showToast({ title: '物流电话已复制', icon: 'none' });
           Taro.setClipboardData({ data: '13800138000' });
@@ -81,27 +105,6 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const store = useStore.getState();
-  const statsData = [
-    { label: '今日订单', value: String(store.orders.length), color: 'primary' },
-    { label: '今日销售', value: formatPrice(todaySales), color: 'success' },
-    { label: '本月销售', value: formatNumber(156800), color: 'primary' },
-    { label: '待处理', value: String(store.orders.filter(o => o.status === 'pending').length), color: 'warning' },
-    { label: '库存预警', value: String(lowStockCount), color: 'error' },
-    { label: '赊账提醒', value: String(creditWarningCount), color: 'error' }
-  ];
-
-  const quickActions = [
-    { key: 'scan', icon: '📷', label: '扫码开单', color: 'color1' },
-    { key: 'quotation', icon: '📋', label: '新建报价', color: 'color2' },
-    { key: 'products', icon: '💡', label: '商品管理', color: 'color3' },
-    { key: 'orders', icon: '📦', label: '订单管理', color: 'color4' },
-    { key: 'inventory', icon: '📊', label: '库存管理', color: 'color5' },
-    { key: 'customers', icon: '👥', label: '客户管理', color: 'color6' },
-    { key: 'finance', icon: '💰', label: '财务管理', color: 'color7' },
-    { key: 'logistics', icon: '🚚', label: '联系物流', color: 'color8' }
-  ];
-
   return (
     <ScrollView
       className={styles.homePage}
@@ -111,68 +114,113 @@ const HomePage: React.FC = () => {
       onRefresherRefresh={handlePullDownRefresh}
     >
       <View className={styles.header}>
-        <View className={styles.headerTop}>
-          <Text className={styles.shopName}>光明灯具批发</Text>
-          <View className={styles.messageIcon} onClick={() => Taro.navigateTo({ url: '/pages/messages/index' })}>
-            <Text>🔔</Text>
-            {unreadCount > 0 && (
+        <View className={styles.welcomeSection}>
+          <View>
+            <Text className={styles.welcomeText}>早上好，张店长</Text>
+            <Text className={styles.todayDate}>
+              今天是{new Date().toLocaleDateString('zh-CN')}
+            </Text>
+          </View>
+          <View
+            className={styles.messageIcon}
+            onClick={() => Taro.navigateTo({ url: '/pages/messages/index' })}
+          >
+            <Text className={styles.messageEmoji}>�</Text>
+            {stats.unread > 0 && (
               <View className={styles.badge}>
-                <Text>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                <Text className={styles.badgeText}>{stats.unread}</Text>
               </View>
             )}
           </View>
         </View>
-        <View className={styles.searchBar}>
-          <Text className={styles.searchIcon}>🔍</Text>
-          <Text className={styles.searchText}>搜索商品 / 订单 / 客户</Text>
-        </View>
-      </View>
 
-      <View className={styles.statsGrid}>
-        {statsData.map((stat, index) => (
-          <View key={index} className={styles.statItem}>
-            <Text className={`${styles.statValue} ${styles[stat.color]}`}>
-              {stat.value}
-            </Text>
-            <Text className={styles.statLabel}>{stat.label}</Text>
+        <View className={styles.statsSection}>
+          <View className={styles.statsCard}>
+            <View className={styles.statsRow}>
+              <View className={styles.statsItem}>
+                <Text className={styles.statsLabel}>今日销售额</Text>
+                <Text className={styles.statsValue}>{formatPrice(stats.todaySales)}</Text>
+              </View>
+              <View className={styles.statsDivider} />
+              <View className={styles.statsItem}>
+                <Text className={styles.statsLabel}>本月销售额</Text>
+                <Text className={styles.statsValue}>{formatPrice(stats.monthSales)}</Text>
+              </View>
+            </View>
+            <View className={styles.statsRow}>
+              <View className={styles.statsItem}>
+                <Text className={styles.statsLabel}>今日订单</Text>
+                <Text className={styles.statsValueSmall}>{formatNumber(stats.todayOrdersCount)}</Text>
+              </View>
+              <View className={styles.statsDivider} />
+              <View className={styles.statsItem}>
+                <Text className={styles.statsLabel}>库存预警</Text>
+                <Text className={`${styles.statsValueSmall} ${styles.warningColor}`}>
+                  {formatNumber(stats.lowStock)}
+                </Text>
+              </View>
+              <View className={styles.statsDivider} />
+              <View className={styles.statsItem}>
+                <Text className={styles.statsLabel}>赊账预警</Text>
+                <Text className={`${styles.statsValueSmall} ${styles.dangerColor}`}>
+                  {formatNumber(stats.creditWarning)}
+                </Text>
+              </View>
+            </View>
           </View>
-        ))}
+        </View>
       </View>
 
       <View className={styles.quickActions}>
-        <View className={styles.sectionTitle}>
-          <Text className={styles.titleText}>快捷功能</Text>
-        </View>
+        <View className={styles.sectionTitle}>快捷操作</View>
         <View className={styles.actionGrid}>
-          {quickActions.map((action) => (
+          {[
+            { icon: '📷', label: '扫码开单', action: 'scan' },
+            { icon: '📝', label: '新建报价', action: 'quotation' },
+            { icon: '💡', label: '商品管理', action: 'products' },
+            { icon: '📦', label: '订单管理', action: 'orders' },
+            { icon: '📊', label: '库存管理', action: 'inventory' },
+            { icon: '👥', label: '客户管理', action: 'customers' },
+            { icon: '💰', label: '财务统计', action: 'finance' },
+            { icon: '🚚', label: '联系物流', action: 'logistics' },
+          ].map((item) => (
             <View
-              key={action.key}
+              key={item.action}
               className={styles.actionItem}
-              onClick={() => handleActionClick(action.key)}
+              onClick={() => handleActionClick(item.action)}
             >
-              <View className={`${styles.actionIcon} ${styles[action.color]}`}>
-                <Text>{action.icon}</Text>
+              <View className={styles.actionIcon}>
+                <Text>{item.icon}</Text>
               </View>
-              <Text className={styles.actionLabel}>{action.label}</Text>
+              <Text className={styles.actionLabel}>{item.label}</Text>
             </View>
           ))}
         </View>
       </View>
 
-      <View className={styles.todayOrders}>
-        <View className={styles.sectionTitle}>
-          <Text className={styles.titleText}>今日订单</Text>
-          <Text className={styles.moreLink} onClick={() => Taro.switchTab({ url: '/pages/orders/index' })}>
-            查看全部 ›
-          </Text>
+      <View className={styles.recentOrders}>
+        <View className={styles.sectionHeader}>
+          <Text className={styles.sectionTitle}>最新订单</Text>
+          <View
+            className={styles.viewMore}
+            onClick={() => Taro.switchTab({ url: '/pages/orders/index' })}
+          >
+            <Text>查看全部 ›</Text>
+          </View>
         </View>
+
         <View className={styles.orderList}>
-          {todayOrders.length > 0 ? (
-            todayOrders.map(order => (
+          {stats.todayOrders.length > 0 ? (
+            stats.todayOrders.map((order) => (
               <OrderCard key={order.id} order={order} />
             ))
           ) : (
-            <EmptyState title='今日暂无订单' description='点击"扫码开单"快速创建订单' />
+            <EmptyState
+              icon='📋'
+              title='暂无订单'
+              description='点击快捷操作开始开单'
+              small
+            />
           )}
         </View>
       </View>

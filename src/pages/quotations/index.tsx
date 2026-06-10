@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
@@ -8,11 +8,14 @@ import { formatPrice, formatDate, getQuotationStatusText } from '@/utils/format'
 import type { Quotation } from '@/types';
 
 const QuotationsPage: React.FC = () => {
-  const [quotations, setQuotations] = useState<Quotation[]>([]);
+  const [version, setVersion] = useState(0);
+  const quotations = useStore((s) => s.quotations);
 
   useDidShow(() => {
-    setQuotations(useStore.getState().quotations);
+    setVersion((v) => v + 1);
   });
+
+  const list = useMemo(() => quotations, [quotations, version]);
 
   const handleQuotationClick = (id: string) => {
     Taro.navigateTo({ url: `/pages/quotation-detail/index?id=${id}` });
@@ -28,7 +31,7 @@ const QuotationsPage: React.FC = () => {
       sent: styles.statusSent,
       accepted: styles.statusAccepted,
       rejected: styles.statusRejected,
-      expired: styles.statusExpired
+      expired: styles.statusExpired,
     };
     return classMap[status] || '';
   };
@@ -37,8 +40,8 @@ const QuotationsPage: React.FC = () => {
     <View className={styles.quotationPage}>
       <ScrollView scrollY>
         <View className={styles.quotationList}>
-          {quotations.length > 0 ? (
-            quotations.map(q => (
+          {list.length > 0 ? (
+            list.map((q) => (
               <View
                 key={q.id}
                 className={styles.quotationCard}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Input } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
@@ -11,38 +11,36 @@ import type { Product } from '@/types';
 const ProductsPage: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [products, setProducts] = useState<Product[]>([]);
+  const [version, setVersion] = useState(0);
 
-  useEffect(() => {
-    loadProducts();
-  }, [activeCategory, searchText]);
+  const allProducts = useStore((s) => s.products);
 
   useDidShow(() => {
-    loadProducts();
+    setVersion((v) => v + 1);
   });
 
-  const loadProducts = () => {
-    let filtered = useStore.getState().products;
-
+  const products = useMemo(() => {
+    let filtered = allProducts;
     if (activeCategory !== 'all') {
-      filtered = filtered.filter(p => p.category === activeCategory);
+      filtered = filtered.filter((p) => p.category === activeCategory);
     }
-
     if (searchText.trim()) {
       const keyword = searchText.trim().toLowerCase();
       filtered = filtered.filter(
-        p => p.name.toLowerCase().includes(keyword) || p.model.toLowerCase().includes(keyword)
+        (p) =>
+          p.name.toLowerCase().includes(keyword) ||
+          p.model.toLowerCase().includes(keyword)
       );
     }
-
-    setProducts(filtered);
-  };
+    return filtered;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allProducts, activeCategory, searchText, version]);
 
   const handlePullDownRefresh = () => {
-    loadProducts();
+    setVersion((v) => v + 1);
     setTimeout(() => {
       Taro.stopPullDownRefresh();
-    }, 1000);
+    }, 800);
   };
 
   const handleAddProduct = () => {
@@ -65,15 +63,13 @@ const ProductsPage: React.FC = () => {
         </View>
       </View>
 
-      <ScrollView
-        scrollX
-        className={styles.categoryTabs}
-        showScrollbar={false}
-      >
-        {productCategories.map(cat => (
+      <ScrollView scrollX className={styles.categoryTabs} showScrollbar={false}>
+        {productCategories.map((cat) => (
           <View
             key={cat.id}
-            className={`${styles.categoryTab} ${activeCategory === cat.id ? styles.active : ''}`}
+            className={`${styles.categoryTab} ${
+              activeCategory === cat.id ? styles.active : ''
+            }`}
             onClick={() => setActiveCategory(cat.id)}
           >
             <Text>{cat.name}</Text>
@@ -89,9 +85,7 @@ const ProductsPage: React.FC = () => {
       >
         <View className={styles.productList}>
           {products.length > 0 ? (
-            products.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))
+            products.map((product) => <ProductCard key={product.id} product={product} />)
           ) : (
             <EmptyState
               icon='💡'

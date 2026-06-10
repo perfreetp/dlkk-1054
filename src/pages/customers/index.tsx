@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Input } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
@@ -11,40 +11,37 @@ import type { Customer } from '@/types';
 const CustomersPage: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [activeGroup, setActiveGroup] = useState('all');
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [version, setVersion] = useState(0);
 
-  useEffect(() => {
-    loadCustomers();
-  }, [activeGroup, searchText]);
+  const allCustomers = useStore((s) => s.customers);
 
   useDidShow(() => {
-    loadCustomers();
+    setVersion((v) => v + 1);
   });
 
-  const loadCustomers = () => {
-    let filtered = useStore.getState().customers;
-
+  const customers = useMemo(() => {
+    let filtered = allCustomers;
     if (activeGroup !== 'all') {
-      filtered = filtered.filter(c => c.group === activeGroup);
+      filtered = filtered.filter((c) => c.group === activeGroup);
     }
-
     if (searchText.trim()) {
       const keyword = searchText.trim().toLowerCase();
       filtered = filtered.filter(
-        c => c.name.toLowerCase().includes(keyword) ||
-             c.company.toLowerCase().includes(keyword) ||
-             c.phone.includes(keyword)
+        (c) =>
+          c.name.toLowerCase().includes(keyword) ||
+          c.company.toLowerCase().includes(keyword) ||
+          c.phone.includes(keyword)
       );
     }
-
-    setCustomers(filtered);
-  };
+    return filtered;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allCustomers, activeGroup, searchText, version]);
 
   const handlePullDownRefresh = () => {
-    loadCustomers();
+    setVersion((v) => v + 1);
     setTimeout(() => {
       Taro.stopPullDownRefresh();
-    }, 1000);
+    }, 800);
   };
 
   const handleAddCustomer = () => {
@@ -67,12 +64,8 @@ const CustomersPage: React.FC = () => {
         </View>
       </View>
 
-      <ScrollView
-        scrollX
-        className={styles.groupTabs}
-        showScrollbar={false}
-      >
-        {customerGroups.map(group => (
+      <ScrollView scrollX className={styles.groupTabs} showScrollbar={false}>
+        {customerGroups.map((group) => (
           <View
             key={group.id}
             className={`${styles.groupTab} ${activeGroup === group.id ? styles.active : ''}`}
@@ -91,7 +84,7 @@ const CustomersPage: React.FC = () => {
       >
         <View className={styles.customerList}>
           {customers.length > 0 ? (
-            customers.map(customer => (
+            customers.map((customer) => (
               <CustomerCard key={customer.id} customer={customer} />
             ))
           ) : (

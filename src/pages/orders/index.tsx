@@ -1,45 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import OrderCard from '@/components/OrderCard';
 import EmptyState from '@/components/EmptyState';
 import { useStore } from '@/store';
-import type { Order, OrderStatus } from '@/types';
+import type { Order } from '@/types';
 
 const tabs = [
   { key: 'all', label: '全部' },
   { key: 'pending', label: '待确认' },
   { key: 'processing', label: '备货中' },
   { key: 'shipped', label: '已发货' },
-  { key: 'completed', label: '已完成' }
+  { key: 'completed', label: '已完成' },
 ];
 
 const OrdersPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [version, setVersion] = useState(0);
 
-  useEffect(() => {
-    loadOrders();
-  }, [activeTab]);
+  const allOrders = useStore((s) => s.orders);
 
   useDidShow(() => {
-    loadOrders();
+    setVersion((v) => v + 1);
   });
 
-  const loadOrders = () => {
-    let filtered = useStore.getState().orders;
-    if (activeTab !== 'all') {
-      filtered = filtered.filter(o => o.status === activeTab);
-    }
-    setOrders(filtered);
-  };
+  const orders = useMemo(() => {
+    if (activeTab === 'all') return allOrders;
+    return allOrders.filter((o) => o.status === activeTab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allOrders, activeTab, version]);
 
   const handlePullDownRefresh = () => {
-    loadOrders();
+    setVersion((v) => v + 1);
     setTimeout(() => {
       Taro.stopPullDownRefresh();
-    }, 1000);
+    }, 800);
   };
 
   const handleScanOrder = () => {
@@ -48,12 +44,8 @@ const OrdersPage: React.FC = () => {
 
   return (
     <View className={styles.ordersPage}>
-      <ScrollView
-        scrollX
-        className={styles.tabs}
-        showScrollbar={false}
-      >
-        {tabs.map(tab => (
+      <ScrollView scrollX className={styles.tabs} showScrollbar={false}>
+        {tabs.map((tab) => (
           <View
             key={tab.key}
             className={`${styles.tabItem} ${activeTab === tab.key ? styles.active : ''}`}
@@ -72,9 +64,7 @@ const OrdersPage: React.FC = () => {
       >
         <View className={styles.orderList}>
           {orders.length > 0 ? (
-            orders.map(order => (
-              <OrderCard key={order.id} order={order} />
-            ))
+            orders.map((order) => <OrderCard key={order.id} order={order} />)
           ) : (
             <EmptyState
               icon='📦'

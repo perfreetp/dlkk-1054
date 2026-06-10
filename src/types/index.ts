@@ -52,6 +52,36 @@ export interface Order {
   createdAt: string;
   remark: string;
   salesman: string;
+  paymentRecords: PaymentRecord[];
+  returnRecords: ReturnRecord[];
+}
+
+export interface PaymentRecord {
+  id: string;
+  amount: number;
+  type: 'deposit' | 'balance' | 'partial';
+  remark: string;
+  createdAt: string;
+  financeRecordId: string;
+}
+
+export interface ReturnRecord {
+  id: string;
+  type: 'return' | 'exchange';
+  items: ReturnItem[];
+  reason: string;
+  refundAmount: number;
+  status: 'pending' | 'processed' | 'completed';
+  createdAt: string;
+}
+
+export interface ReturnItem {
+  productId: string;
+  productName: string;
+  model: string;
+  quantity: number;
+  price: number;
+  amount: number;
 }
 
 export interface OrderItem {
@@ -121,6 +151,8 @@ export interface FinanceRecord {
   category: string;
   amount: number;
   orderNo?: string;
+  orderId?: string;
+  customerId?: string;
   customerName?: string;
   description: string;
   createdAt: string;

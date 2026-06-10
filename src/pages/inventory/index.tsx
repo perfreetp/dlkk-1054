@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, Image, ScrollView, Input } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
@@ -12,18 +12,24 @@ type TabType = 'stock' | 'restock';
 const InventoryPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('stock');
   const [searchText, setSearchText] = useState('');
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [restockRecords, setRestockRecords] = useState<RestockRecord[]>([]);
+  const [version, setVersion] = useState(0);
+
+  const allInventory = useStore((s) => s.inventoryItems);
+  const allRestock = useStore((s) => s.restockRecords);
+  const products = useStore((s) => s.products);
 
   useDidShow(() => {
-    setInventoryItems(useStore.getState().inventoryItems);
-    setRestockRecords(useStore.getState().restockRecords);
+    setVersion((v) => v + 1);
   });
 
-  const lowStockItems = inventoryItems.filter(item => item.stock <= item.warnStock);
+  const inventoryItems = useMemo(() => allInventory, [allInventory, version]);
+  const restockRecords = useMemo(() => allRestock, [allRestock, version]);
 
-  const filteredItems = inventoryItems.filter(item =>
-    item.productName.includes(searchText) || item.model.includes(searchText)
+  const lowStockItems = inventoryItems.filter((item) => item.stock <= item.warnStock);
+
+  const filteredItems = inventoryItems.filter(
+    (item) =>
+      item.productName.includes(searchText) || item.model.includes(searchText)
   );
 
   const handleItemClick = (productId: string) => {
@@ -31,15 +37,13 @@ const InventoryPage: React.FC = () => {
   };
 
   const handleRestock = () => {
-    const products = useStore.getState().products;
-    const names = products.map(p => p.name + ' (' + p.model + ')');
+    const names = products.map((p) => p.name + ' (' + p.model + ')');
     Taro.showActionSheet({
       itemList: names,
       success: (res) => {
         const product = products[res.tapIndex];
         Taro.showModal({
           title: `补货登记 - ${product.name}`,
-          content: '请输入补货数量和供应商',
           editable: true,
           placeholderText: '补货数量',
           success: (modalRes) => {
@@ -58,11 +62,11 @@ const InventoryPage: React.FC = () => {
                 status: 'pending',
               });
               Taro.showToast({ title: '补货登记成功', icon: 'success' });
-              setRestockRecords(useStore.getState().restockRecords);
+              setVersion((v) => v + 1);
             }
-          }
+          },
         });
-      }
+      },
     });
   };
 
@@ -74,72 +78,85 @@ const InventoryPage: React.FC = () => {
         if (res.confirm) {
           useStore.getState().confirmRestock(record.id);
           Taro.showToast({ title: '入库成功', icon: 'success' });
-          setRestockRecords(useStore.getState().restockRecords);
-          setInventoryItems(useStore.getState().inventoryItems);
+          setVersion((v) => v + 1);
         }
-      }
+      },
     });
   };
 
-  const getStockStatusClass = (item: InventoryItem) => {
-    if (item.stock <= item.warnStock) {
-      return styles.stockWarning;
-    }
+  const handleContactLogistics = () => {
+    Taro.makePhoneCall({
+      phoneNumber: '13800138000',
+    }).catch(() => {
+      Taro.showToast({ title: '物流电话已复制', icon: 'none' });
+      Taro.setClipboardData({ data: '13800138000' });
+    });
+  };
+
+  const getStockWarnClass = (item: InventoryItem) => {
+    if (item.stock <= 0) return styles.stockOut;
+    if (item.stock <= item.warnStock) return styles.stockLow;
     return '';
   };
 
   return (
     <View className={styles.inventoryPage}>
-      <View className={styles.searchBar}>
-        <View className={styles.searchInputWrapper}>
-          <Text className={styles.searchIcon}>🔍</Text>
-          <Input
-            className={styles.searchInput}
-            placeholder='搜索商品名称/型号'
-            value={searchText}
-            onInput={(e) => setSearchText(e.detail.value)}
-          />
+      <View className={styles.summaryBar}>
+        <View className={styles.summaryItem}>
+          <Text className={styles.summaryValue}>{formatNumber(inventoryItems.length)}</Text>
+          <Text className={styles.summaryLabel}>总SKU</Text>
+        </View>
+        <View className={styles.summaryItem}>
+          <Text className={`${styles.summaryValue} ${styles.warningColor}`}>
+            {formatNumber(lowStockItems.length)}
+          </Text>
+          <Text className={styles.summaryLabel}>库存预警</Text>
+        </View>
+        <View className={styles.summaryItem}>
+          <Text className={styles.summaryValue}>
+            {formatNumber(restockRecords.filter((r) => r.status === 'pending').length)}
+          </Text>
+          <Text className={styles.summaryLabel}>待入库</Text>
         </View>
       </View>
 
-      <View className={styles.statsRow}>
-        <View className={styles.statItem}>
-          <Text className={styles.statValue}>{inventoryItems.length}</Text>
-          <Text className={styles.statLabel}>商品总数</Text>
+      {activeTab === 'stock' && (
+        <View className={styles.searchSection}>
+          <View className={styles.searchBar}>
+            <Text className={styles.searchIcon}>🔍</Text>
+            <Input
+              className={styles.searchInput}
+              placeholder='搜索商品名称、型号'
+              value={searchText}
+              onInput={(e) => setSearchText(e.detail.value)}
+            />
+          </View>
         </View>
-        <View className={styles.statItem}>
-          <Text className={`${styles.statValue} ${styles.warningValue}`}>{lowStockItems.length}</Text>
-          <Text className={styles.statLabel}>库存预警</Text>
-        </View>
-        <View className={styles.statItem}>
-          <Text className={styles.statValue}>{restockRecords.filter(r => r.status === 'pending').length}</Text>
-          <Text className={styles.statLabel}>待入库</Text>
-        </View>
-      </View>
+      )}
 
       <View className={styles.tabBar}>
         <View
-          className={`${styles.tabItem} ${activeTab === 'stock' ? styles.tabActive : ''}`}
+          className={`${styles.tabItem} ${activeTab === 'stock' ? styles.active : ''}`}
           onClick={() => setActiveTab('stock')}
         >
-          <Text className={styles.tabText}>库存列表</Text>
+          <Text>库存列表</Text>
         </View>
         <View
-          className={`${styles.tabItem} ${activeTab === 'restock' ? styles.tabActive : ''}`}
+          className={`${styles.tabItem} ${activeTab === 'restock' ? styles.active : ''}`}
           onClick={() => setActiveTab('restock')}
         >
-          <Text className={styles.tabText}>补货记录</Text>
+          <Text>补货记录</Text>
         </View>
       </View>
 
-      <ScrollView className={styles.contentScroll} scrollY>
-        {activeTab === 'stock' ? (
-          <View className={styles.stockList}>
+      <ScrollView scrollY>
+        {activeTab === 'stock' && (
+          <View className={styles.inventoryList}>
             {filteredItems.length > 0 ? (
-              filteredItems.map(item => (
+              filteredItems.map((item) => (
                 <View
                   key={item.productId}
-                  className={styles.stockCard}
+                  className={styles.inventoryCard}
                   onClick={() => handleItemClick(item.productId)}
                 >
                   <Image
@@ -148,87 +165,102 @@ const InventoryPage: React.FC = () => {
                     mode='aspectFill'
                   />
                   <View className={styles.productInfo}>
-                    <View className={styles.productTop}>
+                    <View className={styles.productHeader}>
                       <Text className={styles.productName}>{item.productName}</Text>
-                      {item.stock <= item.warnStock && (
-                        <View className={styles.warnTag}>
-                          <Text className={styles.warnText}>预警</Text>
-                        </View>
-                      )}
+                      <Text
+                        className={`${styles.stockQuantity} ${getStockWarnClass(item)}`}
+                      >
+                        库存: {formatNumber(item.stock)}
+                      </Text>
                     </View>
                     <Text className={styles.productModel}>{item.model}</Text>
-                    <View className={styles.productBottom}>
-                      <Text className={styles.stockInfo}>
-                        库存：<Text className={getStockStatusClass(item)}>{item.stock}{item.unit}</Text>
+                    <View className={styles.productMeta}>
+                      <Text className={styles.metaItem}>{item.category}</Text>
+                      <Text className={styles.metaItem}>
+                        预警: {formatNumber(item.warnStock)}
                       </Text>
-                      <Text className={styles.location}>库位：{item.location}</Text>
+                      <Text className={styles.metaItem}>库位: {item.location}</Text>
                     </View>
                   </View>
                 </View>
               ))
             ) : (
-              <EmptyState
-                icon='📦'
-                title='暂无商品'
-                description='添加商品后即可管理库存'
-              />
+              <EmptyState icon='📦' title='暂无库存' description='添加商品后自动创建库存' />
             )}
           </View>
-        ) : (
+        )}
+
+        {activeTab === 'restock' && (
           <View className={styles.restockList}>
             {restockRecords.length > 0 ? (
-              restockRecords.map(record => (
+              restockRecords.map((record) => (
                 <View key={record.id} className={styles.restockCard}>
                   <View className={styles.restockHeader}>
-                    <Text className={styles.restockProduct}>{record.productName}</Text>
-                    <View className={`${styles.statusTag} ${record.status === 'completed' ? styles.statusCompleted : styles.statusPending}`}>
-                      <Text className={styles.statusText}>
-                        {record.status === 'completed' ? '已入库' : '待入库'}
+                    <View>
+                      <Text className={styles.restockProduct}>{record.productName}</Text>
+                      <Text className={styles.restockSupplier}>供应商: {record.supplier}</Text>
+                    </View>
+                    <View
+                      className={`${styles.statusTag} ${
+                        record.status === 'completed' ? styles.statusCompleted : styles.statusPending
+                      }`}
+                    >
+                      <Text>
+                        {record.status === 'completed' ? '已完成' : '待入库'}
                       </Text>
                     </View>
                   </View>
                   <View className={styles.restockInfo}>
-                    <View className={styles.infoRow}>
-                      <Text className={styles.infoLabel}>补货数量</Text>
-                      <Text className={styles.infoValue}>{record.quantity}件</Text>
+                    <View className={styles.restockRow}>
+                      <Text className={styles.restockLabel}>数量</Text>
+                      <Text className={styles.restockValue}>
+                        {formatNumber(record.quantity)}件
+                      </Text>
                     </View>
-                    <View className={styles.infoRow}>
-                      <Text className={styles.infoLabel}>供应商</Text>
-                      <Text className={styles.infoValue}>{record.supplier}</Text>
+                    <View className={styles.restockRow}>
+                      <Text className={styles.restockLabel}>成本</Text>
+                      <Text className={styles.restockValue}>
+                        {formatPrice(record.cost)}
+                      </Text>
                     </View>
-                    <View className={styles.infoRow}>
-                      <Text className={styles.infoLabel}>补货成本</Text>
-                      <Text className={styles.infoValue}>{formatPrice(record.cost)}</Text>
+                    <View className={styles.restockRow}>
+                      <Text className={styles.restockLabel}>登记时间</Text>
+                      <Text className={styles.restockValue}>{formatDate(record.createdAt)}</Text>
                     </View>
-                    <View className={styles.infoRow}>
-                      <Text className={styles.infoLabel}>登记时间</Text>
-                      <Text className={styles.infoValue}>{formatDate(record.createdAt)}</Text>
-                    </View>
-                    {record.status === 'pending' && (
-                      <View className={styles.confirmBtn} onClick={() => handleConfirmRestock(record)}>
-                        <Text className={styles.confirmText}>确认入库</Text>
-                      </View>
-                    )}
                   </View>
+                  {record.status === 'pending' && (
+                    <View
+                      className={styles.confirmBtn}
+                      onClick={() => handleConfirmRestock(record)}
+                    >
+                      <Text className={styles.confirmText}>确认入库</Text>
+                    </View>
+                  )}
                 </View>
               ))
             ) : (
               <EmptyState
                 icon='📋'
                 title='暂无补货记录'
-                description='点击右下角登记补货'
+                description='点击右上角按钮进行补货登记'
               />
             )}
           </View>
         )}
       </ScrollView>
 
-      {activeTab === 'stock' && (
-        <View className={styles.addFab} onClick={handleRestock}>
-          <Text className={styles.addIcon}>+</Text>
-          <Text className={styles.addText}>补货</Text>
+      <View className={styles.actionButtons}>
+        {activeTab === 'restock' && (
+          <View className={styles.actionButton} onClick={handleContactLogistics}>
+            <Text className={styles.actionButtonIcon}>🚚</Text>
+            <Text className={styles.actionButtonText}>联系物流</Text>
+          </View>
+        )}
+        <View className={styles.primaryButton} onClick={handleRestock}>
+          <Text className={styles.primaryButtonIcon}>+</Text>
+          <Text className={styles.primaryButtonText}>补货登记</Text>
         </View>
-      )}
+      </View>
     </View>
   );
 };

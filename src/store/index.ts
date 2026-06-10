@@ -7,7 +7,10 @@ import { mockQuotations } from '@/data/quotations';
 import { mockInventoryItems, mockRestockRecords } from '@/data/inventory';
 import { mockFinanceRecords, mockProductSalesRanking, mockStaffPerformance, mockStatsSummary } from '@/data/finance';
 import { mockMessages } from '@/data/messages';
-import type { Product, Order, Customer, Quotation, InventoryItem, RestockRecord, FinanceRecord, Message, OrderItem, QuotationItem, TierPrice } from '@/types';
+import type {
+  Product, Order, Customer, Quotation, InventoryItem, RestockRecord, FinanceRecord,
+  Message, OrderItem, QuotationItem, TierPrice, PaymentRecord, ReturnRecord
+} from '@/types';
 
 interface StoreState {
   products: Product[];
@@ -18,14 +21,16 @@ interface StoreState {
   restockRecords: RestockRecord[];
   financeRecords: FinanceRecord[];
   messages: Message[];
+  storageLoaded: boolean;
 
   addProduct: (product: Omit<Product, 'id' | 'createdAt'>) => void;
   updateProduct: (id: string, data: Partial<Product>) => void;
 
-  addOrder: (order: Omit<Order, 'id' | 'createdAt'>) => void;
+  addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'paymentRecords' | 'returnRecords'>) => void;
   updateOrder: (id: string, data: Partial<Order>) => void;
-  payDeposit: (orderId: string, amount: number) => void;
-  payBalance: (orderId: string, amount: number) => void;
+  payDeposit: (orderId: string, amount: number, remark?: string) => void;
+  payBalance: (orderId: string, amount: number, remark?: string) => void;
+  addPayment: (orderId: string, amount: number, type: PaymentRecord['type'], remark?: string) => void;
 
   addQuotation: (quotation: Omit<Quotation, 'id' | 'createdAt'>) => void;
   updateQuotation: (id: string, data: Partial<Quotation>) => void;
@@ -39,13 +44,30 @@ interface StoreState {
   markMessageRead: (id: string) => void;
   markAllMessagesRead: () => void;
 
+  addReturnRecord: (orderId: string, data: Omit<ReturnRecord, 'id' | 'createdAt' | 'status'>) => void;
+  processReturn: (orderId: string, returnId: string) => void;
+
   getTierPrice: (productId: string, quantity: number) => number;
+  filterFinanceRecords: (filters: {
+    dateFrom?: string;
+    dateTo?: string;
+    customerId?: string;
+    orderNo?: string;
+  }) => FinanceRecord[];
+  getMonthlySummary: (year?: number, month?: number) => {
+    totalIncome: number;
+    totalExpense: number;
+    profit: number;
+    unpaidBalance: number;
+  };
+  generateOrderShareContent: (orderId: string) => string;
+  generateQuotationShareContent: (quotationId: string) => string;
 
   persist: () => void;
-  loadFromStorage: () => void;
+  loadFromStorage: () => boolean;
 }
 
-const STORAGE_KEY = 'lamp_wholesale_store';
+const STORAGE_KEY = 'lamp_wholesale_store_v2';
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -67,15 +89,24 @@ const generateQuotationNo = () => {
   return `BJ${y}${m}${d}${seq}`;
 };
 
+const patchMockOrders = (): Order[] => {
+  return mockOrders.map((o) => ({
+    ...o,
+    paymentRecords: o.paymentRecords || [],
+    returnRecords: o.returnRecords || [],
+  }));
+};
+
 const getDefaultState = () => ({
   products: [...mockProducts],
-  orders: [...mockOrders],
+  orders: patchMockOrders(),
   customers: [...mockCustomers],
   quotations: [...mockQuotations],
   inventoryItems: [...mockInventoryItems],
   restockRecords: [...mockRestockRecords],
   financeRecords: [...mockFinanceRecords],
   messages: [...mockMessages],
+  storageLoaded: false,
 });
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -141,7 +172,13 @@ export const useStore = create<StoreState>((set, get) => ({
   addOrder: (orderData) => {
     const id = generateId();
     const now = new Date().toISOString();
-    const newOrder: Order = { ...orderData, id, createdAt: now };
+    const newOrder: Order = {
+      ...orderData,
+      id,
+      createdAt: now,
+      paymentRecords: [],
+      returnRecords: [],
+    };
     set((state) => ({ orders: [newOrder, ...state.orders] }));
     get().persist();
   },
@@ -153,33 +190,61 @@ export const useStore = create<StoreState>((set, get) => ({
     get().persist();
   },
 
-  payDeposit: (orderId, amount) => {
+  addPayment: (orderId, amount, type, remark = '') => {
+    if (amount <= 0) return;
     const state = get();
     const order = state.orders.find((o) => o.id === orderId);
     if (!order) return;
 
-    const newDeposit = order.deposit + amount;
-    const newBalance = order.totalAmount - newDeposit;
+    const financeId = generateId();
+    const paymentId = generateId();
+    const now = new Date().toISOString();
+
+    const actualAmount = Math.min(amount, order.balance);
+    const newDeposit = order.deposit + actualAmount;
+    const newBalance = Math.max(0, order.balance - actualAmount);
     const newPaymentStatus: Order['paymentStatus'] =
-      newBalance <= 0 ? 'paid' : 'partial';
-    const actualBalance = Math.max(0, newBalance);
+      newBalance <= 0 ? 'paid' : newDeposit > 0 ? 'partial' : 'unpaid';
+
+    const descMap: Record<PaymentRecord['type'], string> = {
+      deposit: '订单订金收入',
+      balance: '订单尾款收入',
+      partial: '订单分期收款',
+    };
+
+    const newPayment: PaymentRecord = {
+      id: paymentId,
+      amount: actualAmount,
+      type,
+      remark,
+      createdAt: now,
+      financeRecordId: financeId,
+    };
 
     set((state) => ({
       orders: state.orders.map((o) =>
         o.id === orderId
-          ? { ...o, deposit: newDeposit, balance: actualBalance, paymentStatus: newPaymentStatus }
+          ? {
+              ...o,
+              deposit: newDeposit,
+              balance: newBalance,
+              paymentStatus: newPaymentStatus,
+              paymentRecords: [...(o.paymentRecords || []), newPayment],
+            }
           : o
       ),
       financeRecords: [
         {
-          id: generateId(),
+          id: financeId,
           type: 'income',
           category: '订单收入',
-          amount,
+          amount: actualAmount,
+          orderId,
           orderNo: order.orderNo,
+          customerId: order.customerId,
           customerName: order.customerName,
-          description: '订单订金收入',
-          createdAt: new Date().toISOString(),
+          description: `${descMap[type]}${remark ? ` - ${remark}` : ''}`,
+          createdAt: now,
         },
         ...state.financeRecords,
       ],
@@ -187,37 +252,12 @@ export const useStore = create<StoreState>((set, get) => ({
     get().persist();
   },
 
-  payBalance: (orderId, amount) => {
-    const state = get();
-    const order = state.orders.find((o) => o.id === orderId);
-    if (!order) return;
+  payDeposit: (orderId, amount, remark) => {
+    get().addPayment(orderId, amount, 'deposit', remark);
+  },
 
-    const newBalance = Math.max(0, order.balance - amount);
-    const newDeposit = order.deposit + amount;
-    const newPaymentStatus: Order['paymentStatus'] =
-      newBalance <= 0 ? 'paid' : 'partial';
-
-    set((state) => ({
-      orders: state.orders.map((o) =>
-        o.id === orderId
-          ? { ...o, deposit: newDeposit, balance: newBalance, paymentStatus: newPaymentStatus }
-          : o
-      ),
-      financeRecords: [
-        {
-          id: generateId(),
-          type: 'income',
-          category: '订单收入',
-          amount,
-          orderNo: order.orderNo,
-          customerName: order.customerName,
-          description: '订单尾款收入',
-          createdAt: new Date().toISOString(),
-        },
-        ...state.financeRecords,
-      ],
-    }));
-    get().persist();
+  payBalance: (orderId, amount, remark) => {
+    get().addPayment(orderId, amount, 'balance', remark);
   },
 
   addQuotation: (quotationData) => {
@@ -268,6 +308,8 @@ export const useStore = create<StoreState>((set, get) => ({
       createdAt: now,
       remark: `由报价单 ${quotation.quotationNo} 转化`,
       salesman: '张店长',
+      paymentRecords: [],
+      returnRecords: [],
     };
 
     set((state) => ({
@@ -315,6 +357,7 @@ export const useStore = create<StoreState>((set, get) => ({
           type: 'expense',
           category: '进货支出',
           amount: record.cost,
+          customerName: record.supplier,
           description: `${record.productName}进货${record.quantity}件`,
           createdAt: new Date().toISOString(),
         },
@@ -350,12 +393,204 @@ export const useStore = create<StoreState>((set, get) => ({
     get().persist();
   },
 
+  addReturnRecord: (orderId, data) => {
+    const now = new Date().toISOString();
+    const newReturn: ReturnRecord = {
+      ...data,
+      id: generateId(),
+      createdAt: now,
+      status: 'pending',
+    };
+
+    set((state) => ({
+      orders: state.orders.map((o) =>
+        o.id === orderId
+          ? { ...o, returnRecords: [...(o.returnRecords || []), newReturn] }
+          : o
+      ),
+    }));
+    get().persist();
+  },
+
+  processReturn: (orderId, returnId) => {
+    const state = get();
+    const order = state.orders.find((o) => o.id === orderId);
+    if (!order) return;
+    const ret = (order.returnRecords || []).find((r) => r.id === returnId);
+    if (!ret || ret.status === 'completed') return;
+
+    const now = new Date().toISOString();
+    const financeId = generateId();
+
+    set((s) => {
+      const newOrders = s.orders.map((o) => {
+        if (o.id !== orderId) return o;
+        const updatedReturns = (o.returnRecords || []).map((r) =>
+          r.id === returnId ? { ...r, status: 'completed' as const } : r
+        );
+        const newTotal = Math.max(0, o.totalAmount - ret.refundAmount);
+        const newDeposit = Math.min(o.deposit, newTotal);
+        const newBalance = Math.max(0, newTotal - newDeposit);
+        const newPaymentStatus: Order['paymentStatus'] =
+          newBalance <= 0 ? 'paid' : newDeposit > 0 ? 'partial' : 'unpaid';
+        return {
+          ...o,
+          returnRecords: updatedReturns,
+          totalAmount: newTotal,
+          balance: newBalance,
+          deposit: newDeposit,
+          paymentStatus: newPaymentStatus,
+        };
+      });
+
+      const newProducts = s.products.map((p) => {
+        if (ret.type === 'return') {
+          const match = ret.items.find((it) => it.productId === p.id);
+          if (match) return { ...p, stock: p.stock + match.quantity };
+        }
+        return p;
+      });
+
+      const newInventory = s.inventoryItems.map((item) => {
+        if (ret.type === 'return') {
+          const match = ret.items.find((it) => it.productId === item.productId);
+          if (match) return { ...item, stock: item.stock + match.quantity };
+        }
+        return item;
+      });
+
+      const newFinance: FinanceRecord = {
+        id: financeId,
+        type: 'expense',
+        category: '退款支出',
+        amount: ret.refundAmount,
+        orderId,
+        orderNo: order.orderNo,
+        customerId: order.customerId,
+        customerName: order.customerName,
+        description: `${ret.type === 'return' ? '退货' : '换货'}退款 - ${ret.reason}`,
+        createdAt: now,
+      };
+
+      return {
+        orders: newOrders,
+        products: newProducts,
+        inventoryItems: newInventory,
+        financeRecords: [newFinance, ...s.financeRecords],
+      };
+    });
+    get().persist();
+  },
+
   getTierPrice: (productId, quantity) => {
     const product = get().products.find((p) => p.id === productId);
     if (!product) return 0;
     const sorted = [...product.tierPrices].sort((a, b) => b.minQty - a.minQty);
     const matched = sorted.find((t) => quantity >= t.minQty);
     return matched ? matched.price : product.price;
+  },
+
+  filterFinanceRecords: (filters) => {
+    const { dateFrom, dateTo, customerId, orderNo } = filters;
+    return get().financeRecords.filter((r) => {
+      if (dateFrom && r.createdAt.slice(0, 10) < dateFrom) return false;
+      if (dateTo && r.createdAt.slice(0, 10) > dateTo) return false;
+      if (customerId && r.customerId !== customerId) return false;
+      if (orderNo && !(r.orderNo || '').includes(orderNo)) return false;
+      return true;
+    });
+  },
+
+  getMonthlySummary: (y, m) => {
+    const now = new Date();
+    const year = y ?? now.getFullYear();
+    const month = m ?? now.getMonth();
+    const state = get();
+
+    let totalIncome = 0;
+    let totalExpense = 0;
+
+    state.financeRecords.forEach((r) => {
+      const dt = new Date(r.createdAt);
+      if (dt.getFullYear() === year && dt.getMonth() === month) {
+        if (r.type === 'income') totalIncome += r.amount;
+        else totalExpense += r.amount;
+      }
+    });
+
+    let unpaidBalance = 0;
+    state.orders.forEach((o) => {
+      const dt = new Date(o.createdAt);
+      if (dt.getFullYear() === year && dt.getMonth() === month) {
+        unpaidBalance += o.balance;
+      }
+    });
+
+    return {
+      totalIncome,
+      totalExpense,
+      profit: totalIncome - totalExpense,
+      unpaidBalance,
+    };
+  },
+
+  generateOrderShareContent: (orderId) => {
+    const order = get().orders.find((o) => o.id === orderId);
+    if (!order) return '';
+    const lines: string[] = [];
+    lines.push(`【订单确认单】`);
+    lines.push(`单号：${order.orderNo}`);
+    lines.push(`客户：${order.customerName}`);
+    lines.push(`开单时间：${order.createdAt.slice(0, 19).replace('T', ' ')}`);
+    lines.push('');
+    lines.push('📦 商品清单：');
+    order.items.forEach((it, i) => {
+      lines.push(`${i + 1}. ${it.productName}（${it.model}）`);
+      lines.push(`   数量：${it.quantity}  单价：￥${it.price.toFixed(2)}  小计：￥${it.amount.toFixed(2)}`);
+    });
+    lines.push('');
+    lines.push(`💰 应收总额：￥${order.totalAmount.toFixed(2)}`);
+    lines.push(`✅ 已收款：￥${order.deposit.toFixed(2)}`);
+    lines.push(`⏳ 待收款：￥${order.balance.toFixed(2)}`);
+    if (order.remark) {
+      lines.push('');
+      lines.push(`备注：${order.remark}`);
+    }
+    lines.push('');
+    lines.push('——— 灯具批发中心 ———');
+    return lines.join('\n');
+  },
+
+  generateQuotationShareContent: (quotationId) => {
+    const q = get().quotations.find((x) => x.id === quotationId);
+    if (!q) return '';
+    const lines: string[] = [];
+    lines.push(`【客户报价单】`);
+    lines.push(`单号：${q.quotationNo}`);
+    lines.push(`客户：${q.customerName}`);
+    lines.push(`有效期至：${q.validDate}`);
+    lines.push('');
+    lines.push('📦 商品清单（阶梯批发价）：');
+    q.items.forEach((it, i) => {
+      const prod = get().products.find((p) => p.id === it.productId);
+      lines.push(`${i + 1}. ${it.productName}（${it.model}）`);
+      lines.push(`   数量：${it.quantity}  单价：￥${it.price.toFixed(2)}  小计：￥${it.amount.toFixed(2)}`);
+      if (prod && prod.tierPrices.length > 0) {
+        lines.push(`   阶梯价参考：${prod.tierPrices
+          .sort((a, b) => a.minQty - b.minQty)
+          .map((t) => `≥${t.minQty}件￥${t.price.toFixed(2)}`)
+          .join(' / ')}`);
+      }
+    });
+    lines.push('');
+    lines.push(`💰 报价总额：￥${q.totalAmount.toFixed(2)}`);
+    if (q.remark) {
+      lines.push('');
+      lines.push(`备注：${q.remark}`);
+    }
+    lines.push('');
+    lines.push('——— 灯具批发中心 ———');
+    return lines.join('\n');
   },
 
   persist: () => {
@@ -384,17 +619,27 @@ export const useStore = create<StoreState>((set, get) => ({
         const data = JSON.parse(raw);
         set({
           products: data.products || getDefaultState().products,
-          orders: data.orders || getDefaultState().orders,
+          orders: (data.orders || getDefaultState().orders).map((o: Order) => ({
+            ...o,
+            paymentRecords: o.paymentRecords || [],
+            returnRecords: o.returnRecords || [],
+          })),
           customers: data.customers || getDefaultState().customers,
           quotations: data.quotations || getDefaultState().quotations,
           inventoryItems: data.inventoryItems || getDefaultState().inventoryItems,
           restockRecords: data.restockRecords || getDefaultState().restockRecords,
           financeRecords: data.financeRecords || getDefaultState().financeRecords,
           messages: data.messages || getDefaultState().messages,
+          storageLoaded: true,
         });
+        return true;
+      } else {
+        set({ storageLoaded: true });
+        return false;
       }
     } catch (e) {
-      // ignore storage errors
+      set({ storageLoaded: true });
+      return false;
     }
   },
 }));

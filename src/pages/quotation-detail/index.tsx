@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, Image, ScrollView } from '@tarojs/components';
 import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
@@ -8,15 +8,17 @@ import type { Quotation } from '@/types';
 
 const QuotationDetailPage: React.FC = () => {
   const router = useRouter();
-  const [quotation, setQuotation] = useState<Quotation | null>(null);
+  const [version, setVersion] = useState(0);
+  const allQuotations = useStore((s) => s.quotations);
 
   useDidShow(() => {
-    const id = router.params.id;
-    const found = useStore.getState().quotations.find(q => q.id === id);
-    if (found) {
-      setQuotation(found);
-    }
+    setVersion((v) => v + 1);
   });
+
+  const quotation = useMemo(() => {
+    const id = router.params.id;
+    return allQuotations.find((q) => q.id === id) || null;
+  }, [allQuotations, router.params.id, version]);
 
   if (!quotation) {
     return (
@@ -30,14 +32,29 @@ const QuotationDetailPage: React.FC = () => {
     Taro.showToast({ title: '打印报价单', icon: 'none' });
   };
 
-  const handleShare = () => {
-    Taro.showToast({ title: '分享报价单', icon: 'none' });
+  const handleShare = async () => {
+    const content = useStore.getState().generateQuotationShareContent(quotation.id);
+    if (!content) {
+      Taro.showToast({ title: '生成失败', icon: 'none' });
+      return;
+    }
+    try {
+      await Taro.setClipboardData({ data: content });
+      Taro.showModal({
+        title: '分享内容已复制',
+        content: '报价单详情已复制到剪贴板，可直接粘贴发送给客户。',
+        showCancel: false,
+      });
+    } catch (e) {
+      Taro.showToast({ title: '分享失败', icon: 'none' });
+    }
   };
 
   const handleToOrder = () => {
     const orderId = useStore.getState().convertQuotationToOrder(quotation.id);
     if (orderId) {
       Taro.showToast({ title: '已转为订单', icon: 'success' });
+      setVersion((v) => v + 1);
       setTimeout(() => {
         Taro.navigateTo({ url: `/pages/order-detail/index?id=${orderId}` });
       }, 1500);

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
-import Taro from '@tarojs/taro';
+import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import EmptyState from '@/components/EmptyState';
 import { useStore } from '@/store';
@@ -11,17 +11,18 @@ type MessageType = 'all' | 'system' | 'order' | 'inventory' | 'market';
 
 const MessagesPage: React.FC = () => {
   const [activeType, setActiveType] = useState<MessageType>('all');
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [version, setVersion] = useState(0);
+  const allMessages = useStore((s) => s.messages);
 
-  useEffect(() => {
-    setMessages(useStore.getState().messages);
-  }, []);
+  useDidShow(() => {
+    setVersion((v) => v + 1);
+  });
 
-  const filteredMessages = messages.filter(msg =>
+  const messages = useMemo(() => allMessages, [allMessages, version]);
+  const filteredMessages = messages.filter((msg) =>
     activeType === 'all' ? true : msg.type === activeType
   );
-
-  const unreadCount = messages.filter(msg => !msg.isRead).length;
+  const unreadCount = messages.filter((msg) => !msg.isRead).length;
 
   const typeTabs = [
     { key: 'all' as MessageType, label: '全部', icon: '📬' },
@@ -33,13 +34,13 @@ const MessagesPage: React.FC = () => {
 
   const handleMessageClick = (id: string) => {
     useStore.getState().markMessageRead(id);
-    setMessages(useStore.getState().messages);
+    setVersion((v) => v + 1);
     Taro.showToast({ title: '查看详情', icon: 'none' });
   };
 
   const handleMarkAllRead = () => {
     useStore.getState().markAllMessagesRead();
-    setMessages(useStore.getState().messages);
+    setVersion((v) => v + 1);
     Taro.showToast({ title: '已全部标为已读', icon: 'success' });
   };
 

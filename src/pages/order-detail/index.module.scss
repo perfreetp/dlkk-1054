@@ -217,4 +217,220 @@
     background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
     color: $color-text-white;
   }
+
+  &.btnWarn {
+    background: #fff7e8;
+    color: $color-primary;
+    border: 2rpx solid #ffd59e;
+  }
+}
+
+.goodsAmount {
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-price;
+}
+
+.sectionCount {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.incomeColor {
+  color: #00b42a;
+}
+
+.expenseColor {
+  color: #f53f3f;
+}
+
+.paymentList {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: 0 $spacing-lg;
+}
+
+.paymentItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.paymentIcon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: #e8ffea;
+  color: #00b42a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  flex-shrink: 0;
+}
+
+.paymentInfo {
+  flex: 1;
+  margin-left: $spacing-md;
+  min-width: 0;
+}
+
+.paymentType {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+}
+
+.paymentTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.paymentRemark {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.paymentAmount {
+  margin-left: $spacing-md;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: #00b42a;
+}
+
+.returnList {
+  padding: 0;
+}
+
+.returnCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-sm;
+  box-shadow: $shadow-card;
+}
+
+.returnHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.returnBadge {
+  padding: 6rpx 16rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+
+  &.returnBadgeRet {
+    background: #fff1f0;
+    color: #f53f3f;
+  }
+
+  &.returnBadgeExc {
+    background: #e6f4ff;
+    color: #165dff;
+  }
+}
+
+.returnStatus {
+  font-size: $font-size-xs;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-sm;
+
+  &.statusPending {
+    background: #fff7e8;
+    color: $color-primary;
+  }
+
+  &.statusDone {
+    background: #e8ffea;
+    color: #00b42a;
+  }
+}
+
+.returnItemRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-xs 0;
+  border-bottom: 1rpx dashed $color-divider;
+}
+
+.returnItemName {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.returnItemAmount {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.returnRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-xs 0;
+}
+
+.returnLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.returnValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.returnAction {
+  margin-top: $spacing-sm;
+  height: $button-height-sm;
+  border-radius: $radius-button;
+  background: $color-primary;
+  color: $color-text-white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+.actionRow {
+  display: flex;
+  gap: $spacing-md;
+  padding: 0 $page-spacing;
+  margin-bottom: $spacing-md;
+}
+
+.actionBtn {
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+
+  &.actionOutline {
+    background: $color-bg-card;
+    border: 2rpx solid $color-border;
+    color: $color-text-secondary;
+  }
 }
