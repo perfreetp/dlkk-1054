@@ -4,7 +4,8 @@ import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import CustomerCard from '@/components/CustomerCard';
 import EmptyState from '@/components/EmptyState';
-import { mockCustomers, customerGroups } from '@/data/customers';
+import { useStore } from '@/store';
+import { customerGroups } from '@/data/customers';
 import type { Customer } from '@/types';
 
 const CustomersPage: React.FC = () => {
@@ -21,7 +22,7 @@ const CustomersPage: React.FC = () => {
   });
 
   const loadCustomers = () => {
-    let filtered = mockCustomers;
+    let filtered = useStore.getState().customers;
 
     if (activeGroup !== 'all') {
       filtered = filtered.filter(c => c.group === activeGroup);

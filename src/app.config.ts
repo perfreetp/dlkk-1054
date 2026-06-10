@@ -13,7 +13,9 @@ export default defineAppConfig({
     'pages/inventory/index',
     'pages/finance/index',
     'pages/messages/index',
-    'pages/customer-detail/index'
+    'pages/customer-detail/index',
+    'pages/quotation-create/index',
+    'pages/order-create/index'
   ],
   window: {
     backgroundTextStyle: 'light',

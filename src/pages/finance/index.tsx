@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
-import { mockFinanceRecords, mockProductSalesRanking, mockStaffPerformance, mockStatsSummary } from '@/data/finance';
+import { useStore } from '@/store';
+import { mockProductSalesRanking, mockStaffPerformance, mockStatsSummary } from '@/data/finance';
 import { formatPrice, formatDate, formatNumber } from '@/utils/format';
 import type { FinanceRecord, SalesRanking } from '@/types';
 
@@ -15,7 +16,7 @@ const FinancePage: React.FC = () => {
   const [staffPerformance, setStaffPerformance] = useState<SalesRanking[]>([]);
 
   useEffect(() => {
-    setRecords(mockFinanceRecords);
+    setRecords(useStore.getState().financeRecords);
     setProductRanking(mockProductSalesRanking);
     setStaffPerformance(mockStaffPerformance);
   }, []);

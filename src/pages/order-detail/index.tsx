@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, ScrollView } from '@tarojs/components';
-import Taro, { useRouter } from '@tarojs/taro';
+import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
-import { mockOrders } from '@/data/orders';
+import { useStore } from '@/store';
 import { formatPrice, formatDateTime, getOrderStatusText, getPaymentStatusText, getDeliveryStatusText } from '@/utils/format';
 import type { Order } from '@/types';
 
@@ -10,13 +10,13 @@ const OrderDetailPage: React.FC = () => {
   const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
 
-  useEffect(() => {
+  useDidShow(() => {
     const id = router.params.id;
-    const found = mockOrders.find(o => o.id === id);
+    const found = useStore.getState().orders.find(o => o.id === id);
     if (found) {
       setOrder(found);
     }
-  }, [router.params.id]);
+  });
 
   if (!order) {
     return (
@@ -35,7 +35,29 @@ const OrderDetailPage: React.FC = () => {
   };
 
   const handlePay = () => {
-    Taro.showToast({ title: '收款功能', icon: 'none' });
+    const remaining = order.balance;
+    if (remaining <= 0) {
+      Taro.showToast({ title: '订单已全额付款', icon: 'none' });
+      return;
+    }
+    Taro.showModal({
+      title: '收款',
+      content: `待收金额：${formatPrice(remaining)}，确认收款？`,
+      success: (res) => {
+        if (res.confirm) {
+          if (order.deposit === 0 && order.paymentStatus === 'unpaid') {
+            useStore.getState().payDeposit(order.id, remaining);
+          } else {
+            useStore.getState().payBalance(order.id, remaining);
+          }
+          Taro.showToast({ title: '收款成功', icon: 'success' });
+          const updated = useStore.getState().orders.find(o => o.id === order.id);
+          if (updated) {
+            setOrder(updated);
+          }
+        }
+      }
+    });
   };
 
   return (

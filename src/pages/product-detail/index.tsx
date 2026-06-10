@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, ScrollView } from '@tarojs/components';
-import Taro, { useRouter } from '@tarojs/taro';
+import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
-import { mockProducts } from '@/data/products';
+import { useStore } from '@/store';
 import { formatPrice } from '@/utils/format';
 import type { Product } from '@/types';
 
@@ -10,13 +10,13 @@ const ProductDetailPage: React.FC = () => {
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
 
-  useEffect(() => {
+  useDidShow(() => {
     const id = router.params.id;
-    const found = mockProducts.find(p => p.id === id);
+    const found = useStore.getState().products.find(p => p.id === id);
     if (found) {
       setProduct(found);
     }
-  }, [router.params.id]);
+  });
 
   if (!product) {
     return (
@@ -33,7 +33,7 @@ const ProductDetailPage: React.FC = () => {
   };
 
   const handleAddCart = () => {
-    Taro.showToast({ title: '已加入报价单', icon: 'success' });
+    Taro.navigateTo({ url: '/pages/quotation-create/index?productId=' + product.id });
   };
 
   return (

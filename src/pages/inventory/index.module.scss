@@ -270,6 +270,20 @@
   }
 }
 
+.confirmBtn {
+  margin-top: $spacing-md;
+  padding: $spacing-sm $spacing-lg;
+  background: linear-gradient(135deg, $color-gradient-start, $color-gradient-end);
+  border-radius: $radius-button;
+  text-align: center;
+}
+
+.confirmText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
 .addFab {
   position: fixed;
   right: $page-padding;

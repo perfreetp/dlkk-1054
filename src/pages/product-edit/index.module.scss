@@ -96,6 +96,46 @@
   color: $color-text-primary;
 }
 
+.specRow {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm $page-padding;
+  gap: $spacing-sm;
+}
+
+.specInput {
+  flex: 1;
+  height: 64rpx;
+  border: 1rpx solid $color-border;
+  border-radius: $radius-sm;
+  padding: 0 $spacing-sm;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.deleteBtn {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.addRow {
+  padding: $spacing-sm $page-padding;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addBtn {
+  font-size: $font-size-sm;
+  color: $color-primary;
+}
+
 .bottomBar {
   position: fixed;
   bottom: 0;

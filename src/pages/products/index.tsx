@@ -4,7 +4,8 @@ import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import ProductCard from '@/components/ProductCard';
 import EmptyState from '@/components/EmptyState';
-import { mockProducts, productCategories } from '@/data/products';
+import { productCategories } from '@/data/products';
+import { useStore } from '@/store';
 import type { Product } from '@/types';
 
 const ProductsPage: React.FC = () => {
@@ -21,7 +22,7 @@ const ProductsPage: React.FC = () => {
   });
 
   const loadProducts = () => {
-    let filtered = mockProducts;
+    let filtered = useStore.getState().products;
 
     if (activeCategory !== 'all') {
       filtered = filtered.filter(p => p.category === activeCategory);

@@ -4,7 +4,7 @@ import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import OrderCard from '@/components/OrderCard';
 import EmptyState from '@/components/EmptyState';
-import { mockOrders } from '@/data/orders';
+import { useStore } from '@/store';
 import type { Order, OrderStatus } from '@/types';
 
 const tabs = [
@@ -28,7 +28,7 @@ const OrdersPage: React.FC = () => {
   });
 
   const loadOrders = () => {
-    let filtered = mockOrders;
+    let filtered = useStore.getState().orders;
     if (activeTab !== 'all') {
       filtered = filtered.filter(o => o.status === activeTab);
     }
@@ -43,7 +43,7 @@ const OrdersPage: React.FC = () => {
   };
 
   const handleScanOrder = () => {
-    Taro.showToast({ title: '扫码开单功能', icon: 'none' });
+    Taro.navigateTo({ url: '/pages/order-create/index' });
   };
 
   return (

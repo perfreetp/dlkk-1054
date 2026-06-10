@@ -1,21 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import EmptyState from '@/components/EmptyState';
-import { mockQuotations } from '@/data/quotations';
+import { useStore } from '@/store';
 import { formatPrice, formatDate, getQuotationStatusText } from '@/utils/format';
 import type { Quotation } from '@/types';
 
 const QuotationsPage: React.FC = () => {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
 
-  useEffect(() => {
-    setQuotations(mockQuotations);
-  }, []);
-
   useDidShow(() => {
-    setQuotations(mockQuotations);
+    setQuotations(useStore.getState().quotations);
   });
 
   const handleQuotationClick = (id: string) => {
@@ -23,7 +19,7 @@ const QuotationsPage: React.FC = () => {
   };
 
   const handleCreate = () => {
-    Taro.showToast({ title: '新建报价单', icon: 'none' });
+    Taro.navigateTo({ url: '/pages/quotation-create/index' });
   };
 
   const getStatusClass = (status: string) => {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, ScrollView } from '@tarojs/components';
-import Taro, { useRouter } from '@tarojs/taro';
+import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
-import { mockCustomers } from '@/data/customers';
+import { useStore } from '@/store';
 import { formatPrice, formatDate, formatNumber } from '@/utils/format';
 import type { Customer } from '@/types';
 
@@ -10,13 +10,13 @@ const CustomerDetailPage: React.FC = () => {
   const router = useRouter();
   const [customer, setCustomer] = useState<Customer | null>(null);
 
-  useEffect(() => {
+  useDidShow(() => {
     const id = router.params.id;
-    const found = mockCustomers.find(c => c.id === id);
+    const found = useStore.getState().customers.find(c => c.id === id);
     if (found) {
       setCustomer(found);
     }
-  }, [router.params.id]);
+  });
 
   if (!customer) {
     return (
@@ -36,11 +36,16 @@ const CustomerDetailPage: React.FC = () => {
   };
 
   const handleNewOrder = () => {
-    Taro.showToast({ title: '新建订单', icon: 'none' });
+    Taro.navigateTo({ url: `/pages/order-create/index` });
   };
 
   const handleViewOrders = () => {
-    Taro.showToast({ title: '查看订单', icon: 'none' });
+    const customerOrders = useStore.getState().orders.filter(o => o.customerId === customer.id);
+    if (customerOrders.length > 0) {
+      Taro.switchTab({ url: '/pages/orders/index' });
+    } else {
+      Taro.showToast({ title: '暂无历史订单', icon: 'none' });
+    }
   };
 
   const handleEditCustomer = () => {

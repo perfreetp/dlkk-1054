@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, Input } from '@tarojs/components';
-import Taro from '@tarojs/taro';
+import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import EmptyState from '@/components/EmptyState';
-import { mockInventoryItems, mockRestockRecords } from '@/data/inventory';
+import { useStore } from '@/store';
 import { formatPrice, formatDate, formatNumber } from '@/utils/format';
 import type { InventoryItem, RestockRecord } from '@/types';
 
@@ -15,10 +15,10 @@ const InventoryPage: React.FC = () => {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [restockRecords, setRestockRecords] = useState<RestockRecord[]>([]);
 
-  useEffect(() => {
-    setInventoryItems(mockInventoryItems);
-    setRestockRecords(mockRestockRecords);
-  }, []);
+  useDidShow(() => {
+    setInventoryItems(useStore.getState().inventoryItems);
+    setRestockRecords(useStore.getState().restockRecords);
+  });
 
   const lowStockItems = inventoryItems.filter(item => item.stock <= item.warnStock);
 
@@ -31,7 +31,54 @@ const InventoryPage: React.FC = () => {
   };
 
   const handleRestock = () => {
-    Taro.showToast({ title: '补货登记', icon: 'none' });
+    const products = useStore.getState().products;
+    const names = products.map(p => p.name + ' (' + p.model + ')');
+    Taro.showActionSheet({
+      itemList: names,
+      success: (res) => {
+        const product = products[res.tapIndex];
+        Taro.showModal({
+          title: `补货登记 - ${product.name}`,
+          content: '请输入补货数量和供应商',
+          editable: true,
+          placeholderText: '补货数量',
+          success: (modalRes) => {
+            if (modalRes.confirm) {
+              const quantity = Number(modalRes.content) || 0;
+              if (quantity <= 0) {
+                Taro.showToast({ title: '请输入有效数量', icon: 'none' });
+                return;
+              }
+              useStore.getState().addRestockRecord({
+                productId: product.id,
+                productName: product.name,
+                quantity,
+                cost: product.costPrice * quantity,
+                supplier: '默认供应商',
+                status: 'pending',
+              });
+              Taro.showToast({ title: '补货登记成功', icon: 'success' });
+              setRestockRecords(useStore.getState().restockRecords);
+            }
+          }
+        });
+      }
+    });
+  };
+
+  const handleConfirmRestock = (record: RestockRecord) => {
+    Taro.showModal({
+      title: '确认入库',
+      content: `确认 ${record.productName} ${record.quantity}件 入库？`,
+      success: (res) => {
+        if (res.confirm) {
+          useStore.getState().confirmRestock(record.id);
+          Taro.showToast({ title: '入库成功', icon: 'success' });
+          setRestockRecords(useStore.getState().restockRecords);
+          setInventoryItems(useStore.getState().inventoryItems);
+        }
+      }
+    });
   };
 
   const getStockStatusClass = (item: InventoryItem) => {
@@ -157,6 +204,11 @@ const InventoryPage: React.FC = () => {
                       <Text className={styles.infoLabel}>登记时间</Text>
                       <Text className={styles.infoValue}>{formatDate(record.createdAt)}</Text>
                     </View>
+                    {record.status === 'pending' && (
+                      <View className={styles.confirmBtn} onClick={() => handleConfirmRestock(record)}>
+                        <Text className={styles.confirmText}>确认入库</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               ))

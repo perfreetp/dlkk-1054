@@ -1,41 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import OrderCard from '@/components/OrderCard';
 import EmptyState from '@/components/EmptyState';
-import { mockOrders } from '@/data/orders';
-import { mockMessages } from '@/data/messages';
-import { mockInventoryItems } from '@/data/inventory';
-import { mockCustomers } from '@/data/customers';
+import { useStore } from '@/store';
 import { formatPrice, formatNumber } from '@/utils/format';
-import type { Order, Message } from '@/types';
+import type { Order } from '@/types';
 
 const HomePage: React.FC = () => {
   const [todayOrders, setTodayOrders] = useState<Order[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [creditWarningCount, setCreditWarningCount] = useState(0);
-
-  useEffect(() => {
-    loadData();
-  }, []);
+  const [todaySales, setTodaySales] = useState(0);
 
   useDidShow(() => {
     loadData();
   });
 
   const loadData = () => {
-    setTodayOrders(mockOrders.slice(0, 3));
+    const store = useStore.getState();
+    setTodayOrders(store.orders.slice(0, 3));
 
-    const unread = mockMessages.filter(m => !m.isRead).length;
+    const unread = store.messages.filter(m => !m.isRead).length;
     setUnreadCount(unread);
 
-    const lowStock = mockInventoryItems.filter(item => item.stock <= item.warnStock).length;
+    const lowStock = store.inventoryItems.filter(item => item.stock <= item.warnStock).length;
     setLowStockCount(lowStock);
 
-    const creditWarning = mockCustomers.filter(c => c.creditUsed >= c.creditLimit * 0.8).length;
+    const creditWarning = store.customers.filter(c => c.creditUsed >= c.creditLimit * 0.8).length;
     setCreditWarningCount(creditWarning);
+
+    const todayIncome = store.financeRecords
+      .filter(r => r.type === 'income')
+      .reduce((sum, r) => sum + r.amount, 0);
+    setTodaySales(todayIncome);
   };
 
   const handlePullDownRefresh = () => {
@@ -48,10 +48,10 @@ const HomePage: React.FC = () => {
   const handleActionClick = (action: string) => {
     switch (action) {
       case 'scan':
-        Taro.showToast({ title: '扫码开单功能', icon: 'none' });
+        Taro.navigateTo({ url: '/pages/order-create/index' });
         break;
       case 'quotation':
-        Taro.navigateTo({ url: '/pages/quotations/index' });
+        Taro.navigateTo({ url: '/pages/quotation-create/index' });
         break;
       case 'products':
         Taro.switchTab({ url: '/pages/products/index' });
@@ -69,20 +69,26 @@ const HomePage: React.FC = () => {
         Taro.navigateTo({ url: '/pages/finance/index' });
         break;
       case 'logistics':
-        Taro.showToast({ title: '一键联系物流', icon: 'none' });
+        Taro.makePhoneCall({
+          phoneNumber: '13800138000'
+        }).catch(() => {
+          Taro.showToast({ title: '物流电话已复制', icon: 'none' });
+          Taro.setClipboardData({ data: '13800138000' });
+        });
         break;
       default:
         break;
     }
   };
 
+  const store = useStore.getState();
   const statsData = [
-    { label: '今日订单', value: '6', color: 'primary' },
-    { label: '今日销售', value: formatPrice(16446), color: 'success' },
+    { label: '今日订单', value: String(store.orders.length), color: 'primary' },
+    { label: '今日销售', value: formatPrice(todaySales), color: 'success' },
     { label: '本月销售', value: formatNumber(156800), color: 'primary' },
-    { label: '待处理', value: '3', color: 'warning' },
-    { label: '库存预警', value: lowStockCount, color: 'error' },
-    { label: '赊账提醒', value: creditWarningCount, color: 'error' }
+    { label: '待处理', value: String(store.orders.filter(o => o.status === 'pending').length), color: 'warning' },
+    { label: '库存预警', value: String(lowStockCount), color: 'error' },
+    { label: '赊账提醒', value: String(creditWarningCount), color: 'error' }
   ];
 
   const quickActions = [

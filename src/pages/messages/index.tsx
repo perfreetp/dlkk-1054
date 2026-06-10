@@ -3,7 +3,7 @@ import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
 import EmptyState from '@/components/EmptyState';
-import { mockMessages } from '@/data/messages';
+import { useStore } from '@/store';
 import { formatDateTime } from '@/utils/format';
 import type { Message } from '@/types';
 
@@ -14,7 +14,7 @@ const MessagesPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    setMessages(mockMessages);
+    setMessages(useStore.getState().messages);
   }, []);
 
   const filteredMessages = messages.filter(msg =>
@@ -32,16 +32,14 @@ const MessagesPage: React.FC = () => {
   ];
 
   const handleMessageClick = (id: string) => {
-    const updated = messages.map(msg =>
-      msg.id === id ? { ...msg, isRead: true } : msg
-    );
-    setMessages(updated);
+    useStore.getState().markMessageRead(id);
+    setMessages(useStore.getState().messages);
     Taro.showToast({ title: '查看详情', icon: 'none' });
   };
 
   const handleMarkAllRead = () => {
-    const updated = messages.map(msg => ({ ...msg, isRead: true }));
-    setMessages(updated);
+    useStore.getState().markAllMessagesRead();
+    setMessages(useStore.getState().messages);
     Taro.showToast({ title: '已全部标为已读', icon: 'success' });
   };
 
